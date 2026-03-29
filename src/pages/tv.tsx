@@ -94,7 +94,9 @@ export default function TVDisplay() {
               }`}>
                 <div className="flex items-center gap-3 mb-2">
                   <Users className="w-8 h-8 lg:w-10 lg:h-10" />
-                  <span className="text-2xl lg:text-3xl font-bold">TEAM 1</span>
+                  <span className="text-2xl lg:text-3xl font-bold">
+                    {gameState?.team_1_name?.toUpperCase() || "TEAM 1"}
+                  </span>
                 </div>
                 <div className="text-6xl lg:text-8xl font-extrabold">
                   {gameState?.team_1_score || 0}
@@ -121,7 +123,9 @@ export default function TVDisplay() {
                 showWinnerAnimation && winner === "team2" ? "animate-winner-pulse ring-4 ring-gold" : ""
               }`}>
                 <div className="flex items-center justify-end gap-3 mb-2">
-                  <span className="text-2xl lg:text-3xl font-bold">TEAM 2</span>
+                  <span className="text-2xl lg:text-3xl font-bold">
+                    {gameState?.team_2_name?.toUpperCase() || "TEAM 2"}
+                  </span>
                   <Users className="w-8 h-8 lg:w-10 lg:h-10" />
                 </div>
                 <div className="text-6xl lg:text-8xl font-extrabold text-right">
@@ -169,13 +173,17 @@ export default function TVDisplay() {
                 {gameState.game_stage === "guessing" && gameState.team_1_guess !== null && (
                   <div className="grid grid-cols-2 gap-6 lg:gap-12">
                     <div className="bg-team1 rounded-2xl p-6 lg:p-8 text-center">
-                      <p className="text-xl lg:text-2xl font-semibold mb-2">Team 1 Guess</p>
+                      <p className="text-xl lg:text-2xl font-semibold mb-2">
+                        {gameState.team_1_name || "Team 1"} Guess
+                      </p>
                       <p className="text-4xl lg:text-5xl font-extrabold">
                         {formatPrice(gameState.team_1_guess)}
                       </p>
                     </div>
                     <div className="bg-team2 rounded-2xl p-6 lg:p-8 text-center">
-                      <p className="text-xl lg:text-2xl font-semibold mb-2">Team 2 Guess</p>
+                      <p className="text-xl lg:text-2xl font-semibold mb-2">
+                        {gameState.team_2_name || "Team 2"} Guess
+                      </p>
                       <p className="text-4xl lg:text-5xl font-extrabold">
                         {formatPrice(gameState.team_2_guess || 0)}
                       </p>
@@ -199,7 +207,9 @@ export default function TVDisplay() {
                       <div className={`rounded-2xl p-6 lg:p-8 text-center transition-all ${
                         winner === "team1" ? "bg-winner ring-4 ring-gold" : "bg-team1/50"
                       }`}>
-                        <p className="text-xl lg:text-2xl font-semibold mb-2">Team 1</p>
+                        <p className="text-xl lg:text-2xl font-semibold mb-2">
+                          {gameState.team_1_name || "Team 1"}
+                        </p>
                         <p className="text-3xl lg:text-4xl font-extrabold">
                           {formatPrice(gameState.team_1_guess || 0)}
                         </p>
@@ -213,7 +223,9 @@ export default function TVDisplay() {
                       <div className={`rounded-2xl p-6 lg:p-8 text-center transition-all ${
                         winner === "team2" ? "bg-winner ring-4 ring-gold" : "bg-team2/50"
                       }`}>
-                        <p className="text-xl lg:text-2xl font-semibold mb-2">Team 2</p>
+                        <p className="text-xl lg:text-2xl font-semibold mb-2">
+                          {gameState.team_2_name || "Team 2"}
+                        </p>
                         <p className="text-3xl lg:text-4xl font-extrabold">
                           {formatPrice(gameState.team_2_guess || 0)}
                         </p>

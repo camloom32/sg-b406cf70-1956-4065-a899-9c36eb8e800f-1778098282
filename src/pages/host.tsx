@@ -13,6 +13,7 @@ import {
   resetAllProducts,
   importProductsFromCSV,
   getRemainingProductsCount,
+  updateTeamNames,
   type GameStateWithProduct 
 } from "@/services/gameService";
 import { 
@@ -34,6 +35,8 @@ export default function HostController() {
   const [team2Guess, setTeam2Guess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [remainingProducts, setRemainingProducts] = useState(0);
+  const [team1Name, setTeam1Name] = useState("");
+  const [team2Name, setTeam2Name] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -48,6 +51,10 @@ export default function HostController() {
     loadGameState();
     const unsubscribe = subscribeToGameState((newState) => {
       setGameState(newState);
+      if (newState) {
+        setTeam1Name(newState.team_1_name || "Team 1");
+        setTeam2Name(newState.team_2_name || "Team 2");
+      }
     });
     return () => unsubscribe();
   }, [loadGameState]);
@@ -132,6 +139,24 @@ export default function HostController() {
       title: "Products Reset",
       description: "All products are now available again.",
     });
+    setIsLoading(false);
+  };
+
+  const handleUpdateTeamNames = async () => {
+    setIsLoading(true);
+    const success = await updateTeamNames(team1Name, team2Name);
+    if (success) {
+      toast({
+        title: "Team Names Updated",
+        description: "Team names have been saved.",
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Update Failed",
+        description: "Could not update team names.",
+      });
+    }
     setIsLoading(false);
   };
 
@@ -229,11 +254,51 @@ export default function HostController() {
             </p>
           </div>
 
+          {/* Team Names Configuration */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Team Names</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-team1">Team 1 Name</label>
+                <Input
+                  type="text"
+                  placeholder="Team 1"
+                  value={team1Name}
+                  onChange={(e) => setTeam1Name(e.target.value)}
+                  className="h-12"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-team2">Team 2 Name</label>
+                <Input
+                  type="text"
+                  placeholder="Team 2"
+                  value={team2Name}
+                  onChange={(e) => setTeam2Name(e.target.value)}
+                  className="h-12"
+                />
+              </div>
+              <Button 
+                onClick={handleUpdateTeamNames} 
+                disabled={isLoading}
+                className="w-full"
+                variant="secondary"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Save Team Names
+              </Button>
+            </CardContent>
+          </Card>
+
           {/* Scores Display */}
           <div className="grid grid-cols-2 gap-4">
             <Card className="border-2 border-team1">
               <CardContent className="p-4 text-center">
-                <p className="text-sm font-semibold text-muted-foreground">Team 1</p>
+                <p className="text-sm font-semibold text-muted-foreground">
+                  {gameState?.team_1_name || "Team 1"}
+                </p>
                 <p className="text-4xl font-extrabold text-team1">
                   {gameState?.team_1_score || 0}
                 </p>
@@ -241,7 +306,9 @@ export default function HostController() {
             </Card>
             <Card className="border-2 border-team2">
               <CardContent className="p-4 text-center">
-                <p className="text-sm font-semibold text-muted-foreground">Team 2</p>
+                <p className="text-sm font-semibold text-muted-foreground">
+                  {gameState?.team_2_name || "Team 2"}
+                </p>
                 <p className="text-4xl font-extrabold text-team2">
                   {gameState?.team_2_score || 0}
                 </p>
@@ -309,10 +376,12 @@ export default function HostController() {
               {gameState?.game_stage === "guessing" && (
                 <div className="space-y-4 p-4 bg-muted rounded-lg">
                   <div className="space-y-2">
-                    <label className="text-sm font-semibold text-team1">Team 1 Guess ($)</label>
+                    <label className="text-sm font-semibold text-team1">
+                      {gameState?.team_1_name || "Team 1"} Guess ($)
+                    </label>
                     <Input
                       type="number"
-                      placeholder="Enter Team 1's guess"
+                      placeholder={`Enter ${gameState?.team_1_name || "Team 1"}'s guess`}
                       value={team1Guess}
                       onChange={(e) => setTeam1Guess(e.target.value)}
                       className="h-12 text-lg font-mono"
@@ -320,10 +389,12 @@ export default function HostController() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-semibold text-team2">Team 2 Guess ($)</label>
+                    <label className="text-sm font-semibold text-team2">
+                      {gameState?.team_2_name || "Team 2"} Guess ($)
+                    </label>
                     <Input
                       type="number"
-                      placeholder="Enter Team 2's guess"
+                      placeholder={`Enter ${gameState?.team_2_name || "Team 2"}'s guess`}
                       value={team2Guess}
                       onChange={(e) => setTeam2Guess(e.target.value)}
                       className="h-12 text-lg font-mono"

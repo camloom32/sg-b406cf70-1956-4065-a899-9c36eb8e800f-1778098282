@@ -270,3 +270,21 @@ export async function getRemainingProductsCount(): Promise<number> {
 
   return count || 0;
 }
+
+// Update team names
+export async function updateTeamNames(team1Name: string, team2Name: string): Promise<boolean> {
+  const { error } = await supabase
+    .from("game_state")
+    .update({
+      team_1_name: team1Name || "Team 1",
+      team_2_name: team2Name || "Team 2",
+    })
+    .not("id", "is", null);
+
+  if (error) {
+    console.error("Error updating team names:", error);
+    return false;
+  }
+
+  return true;
+}
