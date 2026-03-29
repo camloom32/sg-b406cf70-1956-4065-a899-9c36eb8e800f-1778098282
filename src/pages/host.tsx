@@ -224,6 +224,9 @@ export default function HostController() {
             <h1 className="text-2xl font-extrabold text-foreground">
               The Price is Right
             </h1>
+            <p className="text-sm font-semibold text-gold">
+              190 Access Edition
+            </p>
           </div>
 
           {/* Scores Display */}

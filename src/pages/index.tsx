@@ -21,6 +21,11 @@ export default function Home() {
             <h1 className="text-5xl md:text-6xl font-extrabold text-shadow-lg">
               THE PRICE IS RIGHT
             </h1>
+            <div className="inline-block bg-gold/20 backdrop-blur-sm border-2 border-gold rounded-full px-6 py-2">
+              <p className="text-lg md:text-xl font-bold text-gold">
+                190 Access Edition
+              </p>
+            </div>
             <p className="text-xl md:text-2xl opacity-90">
               Interactive Game Show Experience
             </p>

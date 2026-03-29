@@ -110,6 +110,9 @@ export default function TVDisplay() {
               <h1 className="text-2xl lg:text-4xl font-extrabold mt-4 text-shadow-lg">
                 THE PRICE IS RIGHT
               </h1>
+              <p className="text-sm lg:text-base font-semibold text-gold mt-1">
+                190 Access Edition
+              </p>
             </div>
 
             {/* Team 2 Score */}
