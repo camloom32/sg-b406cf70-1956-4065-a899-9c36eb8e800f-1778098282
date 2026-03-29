@@ -1,18 +1,134 @@
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Monitor, Smartphone, DollarSign, Trophy, Users } from "lucide-react";
+import { Monitor, Smartphone, DollarSign, Trophy, Users, Volume2, VolumeX } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 
 export default function Home() {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(0.3);
+  const [audioError, setAudioError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    // Try to play audio on mount
+    const playAudio = async () => {
+      try {
+        audio.volume = volume;
+        await audio.play();
+        setIsPlaying(true);
+        setIsLoading(false);
+      } catch (error) {
+        console.log("Auto-play blocked or audio error:", error);
+        setIsPlaying(false);
+        setIsLoading(false);
+      }
+    };
+
+    playAudio();
+
+    // Cleanup
+    return () => {
+      if (audio) {
+        audio.pause();
+      }
+    };
+  }, []);
+
+  const togglePlay = async () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    try {
+      if (isPlaying) {
+        audio.pause();
+        setIsPlaying(false);
+      } else {
+        await audio.play();
+        setIsPlaying(true);
+      }
+    } catch (error) {
+      console.error("Error toggling audio:", error);
+      setAudioError(true);
+    }
+  };
+
+  const handleVolumeChange = (values: number[]) => {
+    const newVolume = values[0];
+    setVolume(newVolume);
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume;
+    }
+  };
+
+  const handleAudioError = () => {
+    console.error("Failed to load audio file");
+    setAudioError(true);
+    setIsLoading(false);
+  };
+
   return (
     <>
       <SEO 
         title="The Price is Right - Game Show" 
         description="An interactive Price is Right game for disability services day programs"
       />
+      
+      {/* Background Music */}
+      <audio
+        ref={audioRef}
+        src="https://archive.org/download/tvtunes_31262/The%20Price%20is%20Right%20-%20Main.mp3"
+        loop
+        onError={handleAudioError}
+        onLoadedData={() => setIsLoading(false)}
+      />
+
       <div className="min-h-screen bg-gradient-to-br from-primary via-blue-600 to-blue-800 flex items-center justify-center p-6">
         <div className="max-w-2xl w-full space-y-8">
+          {/* Music Controls */}
+          {!audioError && (
+            <div className="fixed top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-lg space-y-3 w-64 z-50">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-foreground">Background Music</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={togglePlay}
+                  disabled={isLoading}
+                  className="h-8 w-8 p-0"
+                >
+                  {isPlaying ? (
+                    <Volume2 className="w-4 h-4" />
+                  ) : (
+                    <VolumeX className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+              {isPlaying && (
+                <div className="flex items-center gap-2">
+                  <VolumeX className="w-3 h-3 text-muted-foreground" />
+                  <Slider
+                    value={[volume]}
+                    onValueChange={handleVolumeChange}
+                    max={1}
+                    step={0.1}
+                    className="flex-1"
+                  />
+                  <Volume2 className="w-4 h-4 text-muted-foreground" />
+                </div>
+              )}
+              {isLoading && (
+                <p className="text-xs text-muted-foreground">Loading audio...</p>
+              )}
+            </div>
+          )}
+
           {/* Logo & Title */}
           <div className="text-center text-white space-y-4">
             <div className="inline-flex items-center justify-center w-24 h-24 bg-gold rounded-full shadow-2xl animate-glow">
