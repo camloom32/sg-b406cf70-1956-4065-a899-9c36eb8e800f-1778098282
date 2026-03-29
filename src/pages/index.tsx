@@ -4,12 +4,10 @@ import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Monitor, Smartphone, DollarSign, Trophy, Users, Volume2, VolumeX } from "lucide-react";
-import { Slider } from "@/components/ui/slider";
 
 export default function Home() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(0.3);
   const [audioError, setAudioError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -20,7 +18,7 @@ export default function Home() {
     // Try to play audio on mount
     const playAudio = async () => {
       try {
-        audio.volume = volume;
+        audio.volume = 0.3;
         await audio.play();
         setIsPlaying(true);
         setIsLoading(false);
@@ -59,14 +57,6 @@ export default function Home() {
     }
   };
 
-  const handleVolumeChange = (values: number[]) => {
-    const newVolume = values[0];
-    setVolume(newVolume);
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume;
-    }
-  };
-
   const handleAudioError = () => {
     console.error("Failed to load audio file");
     setAudioError(true);
@@ -93,39 +83,20 @@ export default function Home() {
         <div className="max-w-2xl w-full space-y-8">
           {/* Music Controls */}
           {!audioError && (
-            <div className="fixed top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-lg space-y-3 w-64 z-50">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-foreground">Background Music</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={togglePlay}
-                  disabled={isLoading}
-                  className="h-8 w-8 p-0"
-                >
-                  {isPlaying ? (
-                    <Volume2 className="w-4 h-4" />
-                  ) : (
-                    <VolumeX className="w-4 h-4" />
-                  )}
-                </Button>
-              </div>
-              {isPlaying && (
-                <div className="flex items-center gap-2">
-                  <VolumeX className="w-3 h-3 text-muted-foreground" />
-                  <Slider
-                    value={[volume]}
-                    onValueChange={handleVolumeChange}
-                    max={1}
-                    step={0.1}
-                    className="flex-1"
-                  />
-                  <Volume2 className="w-4 h-4 text-muted-foreground" />
-                </div>
-              )}
-              {isLoading && (
-                <p className="text-xs text-muted-foreground">Loading audio...</p>
-              )}
+            <div className="fixed top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg z-50">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={togglePlay}
+                disabled={isLoading}
+                className="h-10 w-10 p-0"
+              >
+                {isPlaying ? (
+                  <Volume2 className="w-5 h-5" />
+                ) : (
+                  <VolumeX className="w-5 h-5" />
+                )}
+              </Button>
             </div>
           )}
 
