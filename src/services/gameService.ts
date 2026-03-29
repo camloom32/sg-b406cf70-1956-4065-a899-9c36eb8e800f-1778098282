@@ -238,7 +238,7 @@ export function subscribeToGameState(
     .on(
       "postgres_changes",
       {
-        event: "*",
+        event: "UPDATE",
         schema: "public",
         table: "game_state",
       },
