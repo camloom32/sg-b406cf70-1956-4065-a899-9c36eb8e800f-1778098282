@@ -274,6 +274,12 @@ export default function AdminPage() {
                 <Button type="submit" className="w-full" size="lg">
                   Sign In
                 </Button>
+                <p className="text-center text-sm text-muted-foreground">
+                  Don't have an account?{" "}
+                  <a href="/register" className="text-primary hover:underline font-medium">
+                    Register here
+                  </a>
+                </p>
               </form>
             </CardContent>
           </Card>
