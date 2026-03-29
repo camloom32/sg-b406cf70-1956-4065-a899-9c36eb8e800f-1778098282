@@ -5,7 +5,7 @@ import {
   subscribeToGameState, 
   type GameStateWithProduct 
 } from "@/services/gameService";
-import { Trophy, DollarSign, Users, Sparkles } from "lucide-react";
+import { Trophy, DollarSign, Users } from "lucide-react";
 
 export default function TVDisplay() {
   const [gameState, setGameState] = useState<GameStateWithProduct | null>(null);
@@ -140,7 +140,7 @@ export default function TVDisplay() {
         <main className="flex-1 flex items-center justify-center px-6 lg:px-12 pb-12">
           {gameState?.game_stage === "waiting" && (
             <div className="text-center animate-scale-in">
-              <Sparkles className="w-24 h-24 lg:w-32 lg:h-32 mx-auto mb-6 text-gold animate-pulse" />
+              <Trophy className="w-24 h-24 lg:w-32 lg:h-32 mx-auto mb-6 text-gold animate-pulse" />
               <h2 className="text-4xl lg:text-6xl font-extrabold text-shadow-lg">
                 GET READY!
               </h2>
