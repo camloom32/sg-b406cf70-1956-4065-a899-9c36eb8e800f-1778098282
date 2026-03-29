@@ -1,4 +1,4 @@
- 
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 export type Json =
   | string
   | number
@@ -21,8 +21,10 @@ export type Database = {
           game_stage: string | null
           id: string
           team_1_guess: number | null
+          team_1_name: string | null
           team_1_score: number | null
           team_2_guess: number | null
+          team_2_name: string | null
           team_2_score: number | null
           updated_at: string | null
         }
@@ -31,8 +33,10 @@ export type Database = {
           game_stage?: string | null
           id?: string
           team_1_guess?: number | null
+          team_1_name?: string | null
           team_1_score?: number | null
           team_2_guess?: number | null
+          team_2_name?: string | null
           team_2_score?: number | null
           updated_at?: string | null
         }
@@ -41,8 +45,10 @@ export type Database = {
           game_stage?: string | null
           id?: string
           team_1_guess?: number | null
+          team_1_name?: string | null
           team_1_score?: number | null
           team_2_guess?: number | null
+          team_2_name?: string | null
           team_2_score?: number | null
           updated_at?: string | null
         }
