@@ -7,7 +7,7 @@ import {
   type GameStateWithProduct,
   type ShowcasePackage 
 } from "@/services/gameService";
-import { Trophy, DollarSign, Users } from "lucide-react";
+import { Trophy, DollarSign, Users, Maximize } from "lucide-react";
 
 export default function TVDisplay() {
   const [gameState, setGameState] = useState<GameStateWithProduct | null>(null);
@@ -15,11 +15,26 @@ export default function TVDisplay() {
   const [winner, setWinner] = useState<"team1" | "team2" | "none" | null>(null);
   const [showcase1, setShowcase1] = useState<ShowcasePackage | null>(null);
   const [showcase2, setShowcase2] = useState<ShowcasePackage | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const loadGameState = useCallback(async () => {
     const state = await getGameState();
     setGameState(state);
   }, []);
+
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+        setIsFullscreen(true);
+      } else {
+        await document.exitFullscreen();
+        setIsFullscreen(false);
+      }
+    } catch (error) {
+      console.error("Fullscreen error:", error);
+    }
+  };
 
   useEffect(() => {
     loadGameState();
@@ -97,6 +112,15 @@ export default function TVDisplay() {
     <>
       <SEO title="The Price is Right - TV Display" />
       <div className="min-h-screen h-screen bg-gradient-to-br from-primary via-blue-600 to-blue-800 text-white overflow-hidden flex flex-col">
+        {/* Fullscreen Button */}
+        <button
+          onClick={toggleFullscreen}
+          className="fixed top-4 right-4 z-50 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg p-3 shadow-lg transition-all"
+          aria-label="Toggle Fullscreen"
+        >
+          <Maximize className="w-6 h-6" />
+        </button>
+
         {/* Confetti Animation */}
         {showWinnerAnimation && winner !== "none" && (
           <div className="fixed inset-0 pointer-events-none z-50">
@@ -195,7 +219,7 @@ export default function TVDisplay() {
                     <img
                       src={gameState.product.image_url}
                       alt={gameState.product.name}
-                      className="max-w-full max-h-full object-contain p-6"
+                      className="w-full h-full object-cover"
                     />
                   </div>
                 </div>
