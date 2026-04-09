@@ -14,6 +14,9 @@ import {
   importProductsFromCSV,
   getRemainingProductsCount,
   updateTeamNames,
+  startShowcaseRound,
+  submitShowcaseGuesses,
+  revealShowcaseResults,
   type GameStateWithProduct 
 } from "@/services/gameService";
 import { 
@@ -37,6 +40,8 @@ export default function HostController() {
   const [remainingProducts, setRemainingProducts] = useState(0);
   const [team1Name, setTeam1Name] = useState("");
   const [team2Name, setTeam2Name] = useState("");
+  const [team1ShowcaseGuess, setTeam1ShowcaseGuess] = useState("");
+  const [team2ShowcaseGuess, setTeam2ShowcaseGuess] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -157,6 +162,63 @@ export default function HostController() {
         description: "Could not update team names.",
       });
     }
+    setIsLoading(false);
+  };
+
+  const handleStartShowcase = async () => {
+    setIsLoading(true);
+    const success = await startShowcaseRound();
+    if (success) {
+      setTeam1ShowcaseGuess("");
+      setTeam2ShowcaseGuess("");
+      toast({
+        title: "Showcase Round Started!",
+        description: "The showcase packages are now displayed on the TV.",
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not start showcase round.",
+      });
+    }
+    setIsLoading(false);
+  };
+
+  const handleSubmitShowcaseGuesses = async () => {
+    const guess1 = parseFloat(team1ShowcaseGuess);
+    const guess2 = parseFloat(team2ShowcaseGuess);
+
+    if (isNaN(guess1) || isNaN(guess2)) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Guesses",
+        description: "Please enter valid numbers for both teams.",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    await submitShowcaseGuesses(guess1, guess2);
+    toast({
+      title: "Showcase Guesses Submitted",
+      description: "Both team guesses have been recorded.",
+    });
+    setIsLoading(false);
+  };
+
+  const handleRevealShowcase = async () => {
+    if (!gameState?.team_1_showcase_guess || !gameState?.team_2_showcase_guess) {
+      toast({
+        variant: "destructive",
+        title: "Missing Guesses",
+        description: "Please submit showcase guesses for both teams first.",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    await revealShowcaseResults();
     setIsLoading(false);
   };
 
@@ -422,6 +484,80 @@ export default function HostController() {
               >
                 <Eye className="w-6 h-6 mr-2" />
                 REVEAL PRICE!
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Showcase Round */}
+          <Card className="border-2 border-gold bg-gold/5">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-gold" />
+                Showcase Round (5 Points!)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Start Showcase Button */}
+              <Button 
+                onClick={handleStartShowcase} 
+                disabled={isLoading || gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed"}
+                className="w-full h-14 text-lg font-bold bg-gold hover:bg-gold/90 text-foreground"
+                size="lg"
+              >
+                <Trophy className="w-6 h-6 mr-2" />
+                Start Showcase Round
+              </Button>
+
+              {/* Showcase Guess Inputs */}
+              {gameState?.game_stage === "showcase" && (
+                <div className="space-y-4 p-4 bg-muted rounded-lg">
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-team1">
+                      {gameState?.team_1_name || "Team 1"} Showcase Guess ($)
+                    </label>
+                    <Input
+                      type="number"
+                      placeholder={`Enter ${gameState?.team_1_name || "Team 1"}'s showcase guess`}
+                      value={team1ShowcaseGuess}
+                      onChange={(e) => setTeam1ShowcaseGuess(e.target.value)}
+                      className="h-12 text-lg font-mono"
+                      step="0.01"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-team2">
+                      {gameState?.team_2_name || "Team 2"} Showcase Guess ($)
+                    </label>
+                    <Input
+                      type="number"
+                      placeholder={`Enter ${gameState?.team_2_name || "Team 2"}'s showcase guess`}
+                      value={team2ShowcaseGuess}
+                      onChange={(e) => setTeam2ShowcaseGuess(e.target.value)}
+                      className="h-12 text-lg font-mono"
+                      step="0.01"
+                    />
+                  </div>
+                  <Button 
+                    onClick={handleSubmitShowcaseGuesses} 
+                    disabled={isLoading || !team1ShowcaseGuess || !team2ShowcaseGuess}
+                    className="w-full h-12"
+                    variant="secondary"
+                  >
+                    <CheckCircle className="w-5 h-5 mr-2" />
+                    Submit Showcase Guesses
+                  </Button>
+                </div>
+              )}
+
+              {/* Reveal Showcase Button */}
+              <Button 
+                onClick={handleRevealShowcase} 
+                disabled={isLoading || gameState?.game_stage !== "showcase" || !gameState?.team_1_showcase_guess}
+                className="w-full h-14 text-lg font-bold bg-winner hover:bg-winner/90 text-white"
+                size="lg"
+              >
+                <Eye className="w-6 h-6 mr-2" />
+                REVEAL SHOWCASE!
               </Button>
             </CardContent>
           </Card>

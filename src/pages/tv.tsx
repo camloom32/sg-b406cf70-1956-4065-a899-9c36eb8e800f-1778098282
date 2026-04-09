@@ -2,8 +2,10 @@ import { useEffect, useState, useCallback } from "react";
 import { SEO } from "@/components/SEO";
 import { 
   getGameState, 
-  subscribeToGameState, 
-  type GameStateWithProduct 
+  subscribeToGameState,
+  getShowcasePackages,
+  type GameStateWithProduct,
+  type ShowcasePackage 
 } from "@/services/gameService";
 import { Trophy, DollarSign, Users } from "lucide-react";
 
@@ -11,6 +13,8 @@ export default function TVDisplay() {
   const [gameState, setGameState] = useState<GameStateWithProduct | null>(null);
   const [showWinnerAnimation, setShowWinnerAnimation] = useState(false);
   const [winner, setWinner] = useState<"team1" | "team2" | "none" | null>(null);
+  const [showcase1, setShowcase1] = useState<ShowcasePackage | null>(null);
+  const [showcase2, setShowcase2] = useState<ShowcasePackage | null>(null);
 
   const loadGameState = useCallback(async () => {
     const state = await getGameState();
@@ -44,11 +48,43 @@ export default function TVDisplay() {
           setTimeout(() => setShowWinnerAnimation(false), 5000);
         }
       }
+
+      // Load showcase packages when showcase round starts
+      if ((newState.game_stage === "showcase" || newState.game_stage === "showcase_revealed") && 
+          (gameState?.game_stage !== "showcase" && gameState?.game_stage !== "showcase_revealed")) {
+        getShowcasePackages().then(({ showcase1, showcase2 }) => {
+          setShowcase1(showcase1);
+          setShowcase2(showcase2);
+        });
+      }
+
+      // Handle showcase reveal animation
+      if (newState.game_stage === "showcase_revealed" && gameState?.game_stage === "showcase") {
+        if (showcase1 && showcase2 && newState.team_1_showcase_guess !== null && newState.team_2_showcase_guess !== null) {
+          const team1Diff = showcase1.total_price - newState.team_1_showcase_guess;
+          const team2Diff = showcase2.total_price - newState.team_2_showcase_guess;
+
+          if (team1Diff < 0 && team2Diff < 0) {
+            setWinner("none");
+          } else if (team1Diff < 0) {
+            setWinner("team2");
+          } else if (team2Diff < 0) {
+            setWinner("team1");
+          } else if (team1Diff <= team2Diff) {
+            setWinner("team1");
+          } else {
+            setWinner("team2");
+          }
+          setShowWinnerAnimation(true);
+          setTimeout(() => setShowWinnerAnimation(false), 5000);
+        }
+      }
+
       setGameState(newState);
     });
 
     return () => unsubscribe();
-  }, [loadGameState, gameState?.game_stage]);
+  }, [loadGameState, gameState?.game_stage, showcase1, showcase2]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -249,6 +285,151 @@ export default function TVDisplay() {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* Showcase Round Display */}
+          {(gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed") && showcase1 && showcase2 && (
+            <div className="w-full max-w-[1800px] h-full flex flex-col justify-center">
+              <div className="mb-6 text-center">
+                <h2 className="text-5xl font-extrabold text-gold text-shadow-lg mb-2">
+                  SHOWCASE SHOWDOWN
+                </h2>
+                <p className="text-2xl opacity-90">5 Bonus Points!</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-8">
+                {/* Team 1 Showcase */}
+                <div className={`bg-team1 rounded-3xl p-6 shadow-2xl ${
+                  gameState.game_stage === "showcase_revealed" && winner === "team1" ? "ring-4 ring-gold animate-winner-pulse" : ""
+                }`}>
+                  <h3 className="text-3xl font-extrabold mb-4 text-center">
+                    {gameState.team_1_name || "Team 1"}'s Showcase
+                  </h3>
+                  
+                  {/* Showcase Items */}
+                  <div className="space-y-4 mb-4">
+                    {showcase1.items.map((item, idx) => (
+                      <div key={idx} className="bg-white/10 rounded-2xl p-4">
+                        <div className="flex gap-4">
+                          <div className="w-32 h-32 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
+                            {item.image_url ? (
+                              <img src={item.image_url} alt={item.item_name} className="max-w-full max-h-full object-contain p-2" />
+                            ) : (
+                              <div className="text-muted-foreground text-xs text-center p-2">Image<br/>Pending</div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-lg font-bold mb-1">{item.item_name}</p>
+                            <p className="text-sm opacity-90 mb-2">{item.description}</p>
+                            {gameState.game_stage === "showcase_revealed" && (
+                              <p className="text-xl font-mono font-bold">
+                                {formatPrice(item.price_cad)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Guess Display */}
+                  {gameState.team_1_showcase_guess !== null && (
+                    <div className="bg-white/20 rounded-2xl p-4 text-center mb-4">
+                      <p className="text-lg font-semibold mb-1">Team Guess</p>
+                      <p className="text-3xl font-extrabold font-mono">
+                        {formatPrice(gameState.team_1_showcase_guess)}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Actual Price */}
+                  {gameState.game_stage === "showcase_revealed" && (
+                    <div className="bg-gold text-foreground rounded-2xl p-6 text-center">
+                      <p className="text-xl font-semibold mb-2">ACTUAL PRICE</p>
+                      <p className="text-5xl font-extrabold font-mono">
+                        {formatPrice(showcase1.total_price)}
+                      </p>
+                      {winner === "team1" && (
+                        <div className="flex items-center justify-center gap-2 mt-4">
+                          <Trophy className="w-8 h-8" />
+                          <span className="text-2xl font-bold">+5 POINTS!</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Team 2 Showcase */}
+                <div className={`bg-team2 rounded-3xl p-6 shadow-2xl ${
+                  gameState.game_stage === "showcase_revealed" && winner === "team2" ? "ring-4 ring-gold animate-winner-pulse" : ""
+                }`}>
+                  <h3 className="text-3xl font-extrabold mb-4 text-center">
+                    {gameState.team_2_name || "Team 2"}'s Showcase
+                  </h3>
+                  
+                  {/* Showcase Items */}
+                  <div className="space-y-4 mb-4">
+                    {showcase2.items.map((item, idx) => (
+                      <div key={idx} className="bg-white/10 rounded-2xl p-4">
+                        <div className="flex gap-4">
+                          <div className="w-32 h-32 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
+                            {item.image_url ? (
+                              <img src={item.image_url} alt={item.item_name} className="max-w-full max-h-full object-contain p-2" />
+                            ) : (
+                              <div className="text-muted-foreground text-xs text-center p-2">Image<br/>Pending</div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-lg font-bold mb-1">{item.item_name}</p>
+                            <p className="text-sm opacity-90 mb-2">{item.description}</p>
+                            {gameState.game_stage === "showcase_revealed" && (
+                              <p className="text-xl font-mono font-bold">
+                                {formatPrice(item.price_cad)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Guess Display */}
+                  {gameState.team_2_showcase_guess !== null && (
+                    <div className="bg-white/20 rounded-2xl p-4 text-center mb-4">
+                      <p className="text-lg font-semibold mb-1">Team Guess</p>
+                      <p className="text-3xl font-extrabold font-mono">
+                        {formatPrice(gameState.team_2_showcase_guess)}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Actual Price */}
+                  {gameState.game_stage === "showcase_revealed" && (
+                    <div className="bg-gold text-foreground rounded-2xl p-6 text-center">
+                      <p className="text-xl font-semibold mb-2">ACTUAL PRICE</p>
+                      <p className="text-5xl font-extrabold font-mono">
+                        {formatPrice(showcase2.total_price)}
+                      </p>
+                      {winner === "team2" && (
+                        <div className="flex items-center justify-center gap-2 mt-4">
+                          <Trophy className="w-8 h-8" />
+                          <span className="text-2xl font-bold">+5 POINTS!</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Both Teams Over Message */}
+              {gameState.game_stage === "showcase_revealed" && winner === "none" && (
+                <div className="mt-6 bg-destructive/80 rounded-2xl p-6 text-center animate-slide-up">
+                  <p className="text-3xl font-bold">
+                    Both teams went over! No bonus points awarded.
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </main>

@@ -288,3 +288,145 @@ export async function updateTeamNames(team1Name: string, team2Name: string): Pro
 
   return true;
 }
+
+// Showcase Round Functions
+
+export type ShowcaseItem = Tables<"showcases">;
+
+export interface ShowcasePackage {
+  showcase_id: number;
+  items: ShowcaseItem[];
+  total_price: number;
+}
+
+// Get showcase packages (1 and 2)
+export async function getShowcasePackages(): Promise<{ showcase1: ShowcasePackage | null; showcase2: ShowcasePackage | null }> {
+  const { data, error } = await supabase
+    .from("showcases")
+    .select("*")
+    .order("showcase_id");
+
+  if (error) {
+    console.error("Error fetching showcases:", error);
+    return { showcase1: null, showcase2: null };
+  }
+
+  const showcase1Items = data.filter(item => item.showcase_id === 1);
+  const showcase2Items = data.filter(item => item.showcase_id === 2);
+
+  const showcase1: ShowcasePackage = {
+    showcase_id: 1,
+    items: showcase1Items,
+    total_price: showcase1Items.reduce((sum, item) => sum + item.price_cad, 0)
+  };
+
+  const showcase2: ShowcasePackage = {
+    showcase_id: 2,
+    items: showcase2Items,
+    total_price: showcase2Items.reduce((sum, item) => sum + item.price_cad, 0)
+  };
+
+  return { showcase1, showcase2 };
+}
+
+// Start showcase round
+export async function startShowcaseRound(): Promise<boolean> {
+  const { error } = await supabase
+    .from("game_state")
+    .update({
+      game_stage: "showcase",
+      team_1_showcase_guess: null,
+      team_2_showcase_guess: null,
+    })
+    .not("id", "is", null);
+
+  if (error) {
+    console.error("Error starting showcase round:", error);
+    return false;
+  }
+
+  return true;
+}
+
+// Submit showcase guesses
+export async function submitShowcaseGuesses(team1Guess: number, team2Guess: number): Promise<boolean> {
+  const { error } = await supabase
+    .from("game_state")
+    .update({
+      team_1_showcase_guess: team1Guess,
+      team_2_showcase_guess: team2Guess,
+    })
+    .not("id", "is", null);
+
+  if (error) {
+    console.error("Error submitting showcase guesses:", error);
+    return false;
+  }
+
+  return true;
+}
+
+// Reveal showcase results
+export async function revealShowcaseResults(): Promise<{ winner: "team1" | "team2" | "none" | null }> {
+  const gameState = await getGameState();
+  const { showcase1, showcase2 } = await getShowcasePackages();
+
+  if (!gameState || !showcase1 || !showcase2) {
+    return { winner: null };
+  }
+
+  const team1Guess = gameState.team_1_showcase_guess;
+  const team2Guess = gameState.team_2_showcase_guess;
+
+  if (team1Guess === null || team2Guess === null) {
+    return { winner: null };
+  }
+
+  // Team 1 gets showcase 1, Team 2 gets showcase 2
+  const team1Diff = showcase1.total_price - team1Guess;
+  const team2Diff = showcase2.total_price - team2Guess;
+
+  let winner: "team1" | "team2" | "none";
+  let newTeam1Score = gameState.team_1_score;
+  let newTeam2Score = gameState.team_2_score;
+
+  // Both went over - no points
+  if (team1Diff < 0 && team2Diff < 0) {
+    winner = "none";
+  }
+  // Team 1 went over, Team 2 didn't
+  else if (team1Diff < 0) {
+    winner = "team2";
+    newTeam2Score += 5;
+  }
+  // Team 2 went over, Team 1 didn't
+  else if (team2Diff < 0) {
+    winner = "team1";
+    newTeam1Score += 5;
+  }
+  // Neither went over - closest wins
+  else if (team1Diff <= team2Diff) {
+    winner = "team1";
+    newTeam1Score += 5;
+  } else {
+    winner = "team2";
+    newTeam2Score += 5;
+  }
+
+  // Update game state with new scores and revealed stage
+  const { error } = await supabase
+    .from("game_state")
+    .update({
+      team_1_score: newTeam1Score,
+      team_2_score: newTeam2Score,
+      game_stage: "showcase_revealed",
+    })
+    .not("id", "is", null);
+
+  if (error) {
+    console.error("Error revealing showcase results:", error);
+    return { winner: null };
+  }
+
+  return { winner };
+}
