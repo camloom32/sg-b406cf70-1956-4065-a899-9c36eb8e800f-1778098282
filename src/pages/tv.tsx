@@ -213,16 +213,18 @@ export default function TVDisplay() {
           {(gameState?.game_stage === "guessing" || gameState?.game_stage === "revealed") && gameState?.product && (
             <div className="w-full max-w-[1600px] h-full flex flex-col justify-center">
               <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 shadow-2xl">
-                {/* Product Image - Fixed size container */}
-                <div className="relative mb-6">
-                  <div className="h-[400px] bg-white rounded-2xl overflow-hidden shadow-xl flex items-center justify-center">
-                    <img
-                      src={gameState.product.image_url}
-                      alt={gameState.product.name}
-                      className="w-full h-full object-cover"
-                    />
+                {/* Product Image - Only show during guessing */}
+                {gameState.game_stage === "guessing" && (
+                  <div className="relative mb-6">
+                    <div className="h-[400px] bg-white rounded-2xl overflow-hidden shadow-xl flex items-center justify-center">
+                      <img
+                        src={gameState.product.image_url}
+                        alt={gameState.product.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Product Name */}
                 <h2 className="text-5xl font-extrabold text-center mb-6 text-shadow-lg line-clamp-2">
