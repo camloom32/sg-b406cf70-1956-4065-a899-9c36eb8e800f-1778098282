@@ -1,4 +1,4 @@
- 
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 export type Json =
   | string
   | number
@@ -20,36 +20,51 @@ export type Database = {
           current_product_id: string | null
           game_stage: string | null
           id: string
+          showcase_active: boolean | null
           team_1_guess: number | null
           team_1_name: string | null
           team_1_score: number | null
+          team_1_showcase_guess: number | null
+          team_1_showcase_id: number | null
           team_2_guess: number | null
           team_2_name: string | null
           team_2_score: number | null
+          team_2_showcase_guess: number | null
+          team_2_showcase_id: number | null
           updated_at: string | null
         }
         Insert: {
           current_product_id?: string | null
           game_stage?: string | null
           id?: string
+          showcase_active?: boolean | null
           team_1_guess?: number | null
           team_1_name?: string | null
           team_1_score?: number | null
+          team_1_showcase_guess?: number | null
+          team_1_showcase_id?: number | null
           team_2_guess?: number | null
           team_2_name?: string | null
           team_2_score?: number | null
+          team_2_showcase_guess?: number | null
+          team_2_showcase_id?: number | null
           updated_at?: string | null
         }
         Update: {
           current_product_id?: string | null
           game_stage?: string | null
           id?: string
+          showcase_active?: boolean | null
           team_1_guess?: number | null
           team_1_name?: string | null
           team_1_score?: number | null
+          team_1_showcase_guess?: number | null
+          team_1_showcase_id?: number | null
           team_2_guess?: number | null
           team_2_name?: string | null
           team_2_score?: number | null
+          team_2_showcase_guess?: number | null
+          team_2_showcase_id?: number | null
           updated_at?: string | null
         }
         Relationships: [
@@ -113,6 +128,39 @@ export type Database = {
           full_name?: string | null
           id?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      showcases: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          item_name: string
+          item_type: string
+          price_cad: number
+          showcase_id: number
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          item_name: string
+          item_type: string
+          price_cad: number
+          showcase_id: number
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          item_name?: string
+          item_type?: string
+          price_cad?: number
+          showcase_id?: number
         }
         Relationships: []
       }
