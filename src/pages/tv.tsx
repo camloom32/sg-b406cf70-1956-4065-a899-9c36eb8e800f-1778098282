@@ -307,27 +307,40 @@ export default function TVDisplay() {
                     {gameState.team_1_name || "Team 1"}'s Showcase
                   </h3>
                   
-                  {/* Showcase Items */}
-                  <div className="space-y-4 mb-4">
+                  {/* Large Showcase Image */}
+                  <div className="mb-6">
+                    <div className="h-[350px] bg-white rounded-2xl overflow-hidden shadow-xl flex items-center justify-center">
+                      {showcase1.items[0]?.image_url ? (
+                        <img 
+                          src={showcase1.items[0].image_url} 
+                          alt="Showcase 1" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="text-muted-foreground text-center p-6">
+                          <p className="text-xl font-semibold">Showcase Image</p>
+                          <p className="text-sm">Pending Upload</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Showcase Items List */}
+                  <div className="space-y-3 mb-4">
                     {showcase1.items.map((item, idx) => (
-                      <div key={idx} className="bg-white/10 rounded-2xl p-4">
-                        <div className="flex gap-4">
-                          <div className="w-32 h-32 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
-                            {item.image_url ? (
-                              <img src={item.image_url} alt={item.item_name} className="max-w-full max-h-full object-contain p-2" />
-                            ) : (
-                              <div className="text-muted-foreground text-xs text-center p-2">Image<br/>Pending</div>
-                            )}
-                          </div>
+                      <div key={idx} className="bg-white/10 rounded-xl p-4">
+                        <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
-                            <p className="text-lg font-bold mb-1">{item.item_name}</p>
-                            <p className="text-sm opacity-90 mb-2">{item.description}</p>
-                            {gameState.game_stage === "showcase_revealed" && (
-                              <p className="text-xl font-mono font-bold">
+                            <p className="text-xl font-bold mb-1">{item.item_name}</p>
+                            <p className="text-sm opacity-90">{item.description}</p>
+                          </div>
+                          {gameState.game_stage === "showcase_revealed" && (
+                            <div className="text-right">
+                              <p className="text-2xl font-mono font-extrabold">
                                 {formatPrice(item.price_cad)}
                               </p>
-                            )}
-                          </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -368,27 +381,40 @@ export default function TVDisplay() {
                     {gameState.team_2_name || "Team 2"}'s Showcase
                   </h3>
                   
-                  {/* Showcase Items */}
-                  <div className="space-y-4 mb-4">
+                  {/* Large Showcase Image */}
+                  <div className="mb-6">
+                    <div className="h-[350px] bg-white rounded-2xl overflow-hidden shadow-xl flex items-center justify-center">
+                      {showcase2.items[0]?.image_url ? (
+                        <img 
+                          src={showcase2.items[0].image_url} 
+                          alt="Showcase 2" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="text-muted-foreground text-center p-6">
+                          <p className="text-xl font-semibold">Showcase Image</p>
+                          <p className="text-sm">Pending Upload</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Showcase Items List */}
+                  <div className="space-y-3 mb-4">
                     {showcase2.items.map((item, idx) => (
-                      <div key={idx} className="bg-white/10 rounded-2xl p-4">
-                        <div className="flex gap-4">
-                          <div className="w-32 h-32 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
-                            {item.image_url ? (
-                              <img src={item.image_url} alt={item.item_name} className="max-w-full max-h-full object-contain p-2" />
-                            ) : (
-                              <div className="text-muted-foreground text-xs text-center p-2">Image<br/>Pending</div>
-                            )}
-                          </div>
+                      <div key={idx} className="bg-white/10 rounded-xl p-4">
+                        <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
-                            <p className="text-lg font-bold mb-1">{item.item_name}</p>
-                            <p className="text-sm opacity-90 mb-2">{item.description}</p>
-                            {gameState.game_stage === "showcase_revealed" && (
-                              <p className="text-xl font-mono font-bold">
+                            <p className="text-xl font-bold mb-1">{item.item_name}</p>
+                            <p className="text-sm opacity-90">{item.description}</p>
+                          </div>
+                          {gameState.game_stage === "showcase_revealed" && (
+                            <div className="text-right">
+                              <p className="text-2xl font-mono font-extrabold">
                                 {formatPrice(item.price_cad)}
                               </p>
-                            )}
-                          </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
