@@ -220,7 +220,7 @@ export default function TVDisplay() {
                       <img
                         src={gameState.product.image_url}
                         alt={gameState.product.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                       />
                     </div>
                   </div>
