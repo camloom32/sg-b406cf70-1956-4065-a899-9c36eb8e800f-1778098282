@@ -289,6 +289,44 @@ export async function updateTeamNames(team1Name: string, team2Name: string): Pro
   return true;
 }
 
+// Skip current product without scoring
+export async function skipCurrentProduct(): Promise<boolean> {
+  const gameState = await getGameState();
+  
+  if (!gameState?.current_product_id) {
+    return false;
+  }
+
+  // Mark current product as used
+  const { error: productError } = await supabase
+    .from("products")
+    .update({ is_used: true })
+    .eq("id", gameState.current_product_id);
+
+  if (productError) {
+    console.error("Error marking product as used:", productError);
+    return false;
+  }
+
+  // Reset game state to waiting
+  const { error: stateError } = await supabase
+    .from("game_state")
+    .update({
+      current_product_id: null,
+      team_1_guess: null,
+      team_2_guess: null,
+      game_stage: "waiting",
+    })
+    .not("id", "is", null);
+
+  if (stateError) {
+    console.error("Error resetting game state:", stateError);
+    return false;
+  }
+
+  return true;
+}
+
 // Showcase Round Functions
 
 export type ShowcaseItem = Tables<"showcases">;

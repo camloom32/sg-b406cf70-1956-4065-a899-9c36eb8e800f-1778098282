@@ -17,6 +17,7 @@ import {
   startShowcaseRound,
   submitShowcaseGuesses,
   revealShowcaseResults,
+  skipCurrentProduct,
   type GameStateWithProduct 
 } from "@/services/gameService";
 import { 
@@ -28,7 +29,8 @@ import {
   DollarSign,
   AlertCircle,
   CheckCircle,
-  Package
+  Package,
+  SkipForward
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -219,6 +221,26 @@ export default function HostController() {
 
     setIsLoading(true);
     await revealShowcaseResults();
+    setIsLoading(false);
+  };
+
+  const handleSkipProduct = async () => {
+    setIsLoading(true);
+    const success = await skipCurrentProduct();
+    if (success) {
+      const count = await getRemainingProductsCount();
+      setRemainingProducts(count);
+      toast({
+        title: "Product Skipped",
+        description: "The current product has been skipped.",
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Skip Failed",
+        description: "Could not skip the current product.",
+      });
+    }
     setIsLoading(false);
   };
 
@@ -433,6 +455,19 @@ export default function HostController() {
                 <Play className="w-6 h-6 mr-2" />
                 Start Next Round
               </Button>
+
+              {/* Skip Product Button */}
+              {gameState?.game_stage === "guessing" && (
+                <Button 
+                  onClick={handleSkipProduct} 
+                  disabled={isLoading}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <SkipForward className="w-4 h-4 mr-2" />
+                  Skip This Product
+                </Button>
+              )}
 
               {/* Guess Inputs */}
               {gameState?.game_stage === "guessing" && (

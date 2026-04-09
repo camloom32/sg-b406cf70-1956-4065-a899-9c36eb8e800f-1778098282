@@ -145,20 +145,20 @@ export default function TVDisplay() {
         )}
 
         {/* Header with Scores - Optimized for 16:9 */}
-        <header className="px-8 py-6">
+        <header className={gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "px-8 py-3" : "px-8 py-6"}>
           <div className="flex items-center justify-between gap-8 max-w-[1920px] mx-auto">
             {/* Team 1 Score */}
             <div className="flex-1 max-w-md">
-              <div className={`bg-team1 rounded-2xl p-6 shadow-2xl transform transition-all duration-300 ${
-                showWinnerAnimation && winner === "team1" ? "animate-winner-pulse ring-4 ring-gold" : ""
-              }`}>
-                <div className="flex items-center gap-3 mb-2">
-                  <Users className="w-8 h-8" />
-                  <span className="text-2xl font-bold truncate">
+              <div className={`bg-team1 rounded-2xl shadow-2xl transform transition-all duration-300 ${
+                gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "p-3" : "p-6"
+              } ${showWinnerAnimation && winner === "team1" ? "animate-winner-pulse ring-4 ring-gold" : ""}`}>
+                <div className={`flex items-center gap-3 ${gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "mb-1" : "mb-2"}`}>
+                  <Users className={gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "w-5 h-5" : "w-8 h-8"} />
+                  <span className={`font-bold truncate ${gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "text-lg" : "text-2xl"}`}>
                     {gameState?.team_1_name?.toUpperCase() || "TEAM 1"}
                   </span>
                 </div>
-                <div className="text-7xl font-extrabold">
+                <div className={`font-extrabold ${gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "text-4xl" : "text-7xl"}`}>
                   {gameState?.team_1_score || 0}
                 </div>
               </div>
@@ -166,29 +166,35 @@ export default function TVDisplay() {
 
             {/* Center Logo */}
             <div className="flex-shrink-0 text-center">
-              <div className="bg-gold text-foreground rounded-full p-5 shadow-2xl animate-glow inline-block">
-                <DollarSign className="w-14 h-14" />
+              <div className={`bg-gold text-foreground rounded-full shadow-2xl animate-glow inline-block ${
+                gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "p-2" : "p-5"
+              }`}>
+                <DollarSign className={gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "w-8 h-8" : "w-14 h-14"} />
               </div>
-              <h1 className="text-3xl font-extrabold mt-3 text-shadow-lg whitespace-nowrap">
+              <h1 className={`font-extrabold text-shadow-lg whitespace-nowrap ${
+                gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "text-xl mt-1" : "text-3xl mt-3"
+              }`}>
                 THE PRICE IS RIGHT
               </h1>
-              <p className="text-sm font-semibold text-gold mt-1">
-                190 Access Edition
-              </p>
+              {!(gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed") && (
+                <p className="text-sm font-semibold text-gold mt-1">
+                  190 Access Edition
+                </p>
+              )}
             </div>
 
             {/* Team 2 Score */}
             <div className="flex-1 max-w-md">
-              <div className={`bg-team2 rounded-2xl p-6 shadow-2xl transform transition-all duration-300 ${
-                showWinnerAnimation && winner === "team2" ? "animate-winner-pulse ring-4 ring-gold" : ""
-              }`}>
-                <div className="flex items-center justify-end gap-3 mb-2">
-                  <span className="text-2xl font-bold truncate">
+              <div className={`bg-team2 rounded-2xl shadow-2xl transform transition-all duration-300 ${
+                gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "p-3" : "p-6"
+              } ${showWinnerAnimation && winner === "team2" ? "animate-winner-pulse ring-4 ring-gold" : ""}`}>
+                <div className={`flex items-center justify-end gap-3 ${gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "mb-1" : "mb-2"}`}>
+                  <span className={`font-bold truncate ${gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "text-lg" : "text-2xl"}`}>
                     {gameState?.team_2_name?.toUpperCase() || "TEAM 2"}
                   </span>
-                  <Users className="w-8 h-8" />
+                  <Users className={gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "w-5 h-5" : "w-8 h-8"} />
                 </div>
-                <div className="text-7xl font-extrabold text-right">
+                <div className={`font-extrabold text-right ${gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "text-4xl" : "text-7xl"}`}>
                   {gameState?.team_2_score || 0}
                 </div>
               </div>
@@ -317,25 +323,25 @@ export default function TVDisplay() {
           {/* Showcase Round Display */}
           {(gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed") && showcase1 && showcase2 && (
             <div className="w-full max-w-[1800px] h-full flex flex-col justify-center">
-              <div className="mb-6 text-center">
-                <h2 className="text-5xl font-extrabold text-gold text-shadow-lg mb-2">
+              <div className="mb-3 text-center">
+                <h2 className="text-3xl font-extrabold text-gold text-shadow-lg mb-1">
                   SHOWCASE SHOWDOWN
                 </h2>
-                <p className="text-2xl opacity-90">5 Bonus Points!</p>
+                <p className="text-lg opacity-90">5 Bonus Points!</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-8">
+              <div className="grid grid-cols-2 gap-6">
                 {/* Team 1 Showcase */}
-                <div className={`bg-team1 rounded-3xl p-6 shadow-2xl ${
+                <div className={`bg-team1 rounded-3xl p-4 shadow-2xl ${
                   gameState.game_stage === "showcase_revealed" && winner === "team1" ? "ring-4 ring-gold animate-winner-pulse" : ""
                 }`}>
-                  <h3 className="text-3xl font-extrabold mb-4 text-center">
+                  <h3 className="text-2xl font-extrabold mb-3 text-center">
                     {gameState.team_1_name || "Team 1"}'s Showcase
                   </h3>
                   
                   {/* Large Showcase Image */}
-                  <div className="mb-6">
-                    <div className="h-[350px] bg-white rounded-2xl overflow-hidden shadow-xl flex items-center justify-center">
+                  <div className="mb-3">
+                    <div className="h-[280px] bg-white rounded-2xl overflow-hidden shadow-xl flex items-center justify-center">
                       {showcase1.items[0]?.image_url ? (
                         <img 
                           src={showcase1.items[0].image_url} 
@@ -352,17 +358,17 @@ export default function TVDisplay() {
                   </div>
 
                   {/* Showcase Items List */}
-                  <div className="space-y-3 mb-4">
+                  <div className="space-y-2 mb-3">
                     {showcase1.items.map((item, idx) => (
-                      <div key={idx} className="bg-white/10 rounded-xl p-4">
+                      <div key={idx} className="bg-white/10 rounded-xl p-3">
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
-                            <p className="text-xl font-bold mb-1">{item.item_name}</p>
-                            <p className="text-sm opacity-90">{item.description}</p>
+                            <p className="text-lg font-bold mb-0.5">{item.item_name}</p>
+                            <p className="text-xs opacity-90 line-clamp-1">{item.description}</p>
                           </div>
                           {gameState.game_stage === "showcase_revealed" && (
                             <div className="text-right">
-                              <p className="text-2xl font-mono font-extrabold">
+                              <p className="text-xl font-mono font-extrabold">
                                 {formatPrice(item.price_cad)}
                               </p>
                             </div>
@@ -374,9 +380,9 @@ export default function TVDisplay() {
 
                   {/* Guess Display */}
                   {gameState.team_1_showcase_guess !== null && (
-                    <div className="bg-white/20 rounded-2xl p-4 text-center mb-4">
-                      <p className="text-lg font-semibold mb-1">Team Guess</p>
-                      <p className="text-3xl font-extrabold font-mono">
+                    <div className="bg-white/20 rounded-2xl p-3 text-center mb-3">
+                      <p className="text-sm font-semibold mb-1">Team Guess</p>
+                      <p className="text-2xl font-extrabold font-mono">
                         {formatPrice(gameState.team_1_showcase_guess)}
                       </p>
                     </div>
@@ -384,15 +390,15 @@ export default function TVDisplay() {
 
                   {/* Actual Price */}
                   {gameState.game_stage === "showcase_revealed" && (
-                    <div className="bg-gold text-foreground rounded-2xl p-6 text-center">
-                      <p className="text-xl font-semibold mb-2">ACTUAL PRICE</p>
-                      <p className="text-5xl font-extrabold font-mono">
+                    <div className="bg-gold text-foreground rounded-2xl p-4 text-center">
+                      <p className="text-lg font-semibold mb-1">ACTUAL PRICE</p>
+                      <p className="text-4xl font-extrabold font-mono">
                         {formatPrice(showcase1.total_price)}
                       </p>
                       {winner === "team1" && (
-                        <div className="flex items-center justify-center gap-2 mt-4">
-                          <Trophy className="w-8 h-8" />
-                          <span className="text-2xl font-bold">+5 POINTS!</span>
+                        <div className="flex items-center justify-center gap-2 mt-3">
+                          <Trophy className="w-6 h-6" />
+                          <span className="text-xl font-bold">+5 POINTS!</span>
                         </div>
                       )}
                     </div>
@@ -400,16 +406,16 @@ export default function TVDisplay() {
                 </div>
 
                 {/* Team 2 Showcase */}
-                <div className={`bg-team2 rounded-3xl p-6 shadow-2xl ${
+                <div className={`bg-team2 rounded-3xl p-4 shadow-2xl ${
                   gameState.game_stage === "showcase_revealed" && winner === "team2" ? "ring-4 ring-gold animate-winner-pulse" : ""
                 }`}>
-                  <h3 className="text-3xl font-extrabold mb-4 text-center">
+                  <h3 className="text-2xl font-extrabold mb-3 text-center">
                     {gameState.team_2_name || "Team 2"}'s Showcase
                   </h3>
                   
                   {/* Large Showcase Image */}
-                  <div className="mb-6">
-                    <div className="h-[350px] bg-white rounded-2xl overflow-hidden shadow-xl flex items-center justify-center">
+                  <div className="mb-3">
+                    <div className="h-[280px] bg-white rounded-2xl overflow-hidden shadow-xl flex items-center justify-center">
                       {showcase2.items[0]?.image_url ? (
                         <img 
                           src={showcase2.items[0].image_url} 
@@ -426,17 +432,17 @@ export default function TVDisplay() {
                   </div>
 
                   {/* Showcase Items List */}
-                  <div className="space-y-3 mb-4">
+                  <div className="space-y-2 mb-3">
                     {showcase2.items.map((item, idx) => (
-                      <div key={idx} className="bg-white/10 rounded-xl p-4">
+                      <div key={idx} className="bg-white/10 rounded-xl p-3">
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
-                            <p className="text-xl font-bold mb-1">{item.item_name}</p>
-                            <p className="text-sm opacity-90">{item.description}</p>
+                            <p className="text-lg font-bold mb-0.5">{item.item_name}</p>
+                            <p className="text-xs opacity-90 line-clamp-1">{item.description}</p>
                           </div>
                           {gameState.game_stage === "showcase_revealed" && (
                             <div className="text-right">
-                              <p className="text-2xl font-mono font-extrabold">
+                              <p className="text-xl font-mono font-extrabold">
                                 {formatPrice(item.price_cad)}
                               </p>
                             </div>
@@ -448,9 +454,9 @@ export default function TVDisplay() {
 
                   {/* Guess Display */}
                   {gameState.team_2_showcase_guess !== null && (
-                    <div className="bg-white/20 rounded-2xl p-4 text-center mb-4">
-                      <p className="text-lg font-semibold mb-1">Team Guess</p>
-                      <p className="text-3xl font-extrabold font-mono">
+                    <div className="bg-white/20 rounded-2xl p-3 text-center mb-3">
+                      <p className="text-sm font-semibold mb-1">Team Guess</p>
+                      <p className="text-2xl font-extrabold font-mono">
                         {formatPrice(gameState.team_2_showcase_guess)}
                       </p>
                     </div>
@@ -458,15 +464,15 @@ export default function TVDisplay() {
 
                   {/* Actual Price */}
                   {gameState.game_stage === "showcase_revealed" && (
-                    <div className="bg-gold text-foreground rounded-2xl p-6 text-center">
-                      <p className="text-xl font-semibold mb-2">ACTUAL PRICE</p>
-                      <p className="text-5xl font-extrabold font-mono">
+                    <div className="bg-gold text-foreground rounded-2xl p-4 text-center">
+                      <p className="text-lg font-semibold mb-1">ACTUAL PRICE</p>
+                      <p className="text-4xl font-extrabold font-mono">
                         {formatPrice(showcase2.total_price)}
                       </p>
                       {winner === "team2" && (
-                        <div className="flex items-center justify-center gap-2 mt-4">
-                          <Trophy className="w-8 h-8" />
-                          <span className="text-2xl font-bold">+5 POINTS!</span>
+                        <div className="flex items-center justify-center gap-2 mt-3">
+                          <Trophy className="w-6 h-6" />
+                          <span className="text-xl font-bold">+5 POINTS!</span>
                         </div>
                       )}
                     </div>
@@ -476,8 +482,8 @@ export default function TVDisplay() {
 
               {/* Both Teams Over Message */}
               {gameState.game_stage === "showcase_revealed" && winner === "none" && (
-                <div className="mt-6 bg-destructive/80 rounded-2xl p-6 text-center animate-slide-up">
-                  <p className="text-3xl font-bold">
+                <div className="mt-4 bg-destructive/80 rounded-2xl p-4 text-center animate-slide-up">
+                  <p className="text-2xl font-bold">
                     Both teams went over! No bonus points awarded.
                   </p>
                 </div>
