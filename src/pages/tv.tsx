@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { SEO } from "@/components/SEO";
 import { 
   getGameState, 
@@ -16,6 +16,7 @@ export default function TVDisplay() {
   const [showcase1, setShowcase1] = useState<ShowcasePackage | null>(null);
   const [showcase2, setShowcase2] = useState<ShowcasePackage | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   const loadGameState = useCallback(async () => {
     const state = await getGameState();
@@ -83,15 +84,43 @@ export default function TVDisplay() {
             setWinner("none");
           } else if (team1Diff < 0) {
             setWinner("team2");
+            // Play theme song for winner
+            if (audioRef.current) {
+              audioRef.current.volume = 0.3;
+              audioRef.current.play().catch(err => console.log("Audio play error:", err));
+            }
           } else if (team2Diff < 0) {
             setWinner("team1");
+            // Play theme song for winner
+            if (audioRef.current) {
+              audioRef.current.volume = 0.3;
+              audioRef.current.play().catch(err => console.log("Audio play error:", err));
+            }
           } else if (team1Diff <= team2Diff) {
             setWinner("team1");
+            // Play theme song for winner
+            if (audioRef.current) {
+              audioRef.current.volume = 0.3;
+              audioRef.current.play().catch(err => console.log("Audio play error:", err));
+            }
           } else {
             setWinner("team2");
+            // Play theme song for winner
+            if (audioRef.current) {
+              audioRef.current.volume = 0.3;
+              audioRef.current.play().catch(err => console.log("Audio play error:", err));
+            }
           }
           setShowWinnerAnimation(true);
           setTimeout(() => setShowWinnerAnimation(false), 5000);
+        }
+      }
+
+      // Stop music when leaving showcase_revealed stage
+      if (gameState?.game_stage === "showcase_revealed" && newState.game_stage !== "showcase_revealed") {
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
         }
       }
 
@@ -111,6 +140,14 @@ export default function TVDisplay() {
   return (
     <>
       <SEO title="The Price is Right - TV Display" />
+      
+      {/* Background Music for Showcase Winner */}
+      <audio
+        ref={audioRef}
+        src="https://archive.org/download/tvtunes_31262/The%20Price%20is%20Right%20-%20Main.mp3"
+        loop
+      />
+
       <div className="min-h-screen h-screen bg-gradient-to-br from-primary via-blue-600 to-blue-800 text-white overflow-hidden flex flex-col">
         {/* Fullscreen Button */}
         <button
