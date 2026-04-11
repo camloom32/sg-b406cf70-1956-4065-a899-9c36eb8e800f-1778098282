@@ -229,6 +229,33 @@ export async function importProductsFromCSV(
   return { success: true, count: data?.length || 0 };
 }
 
+// Export products to CSV
+export async function exportProductsToCSV(): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("products")
+    .select("name, actual_price, image_url, is_used")
+    .order("id");
+
+  if (error) {
+    console.error("Error exporting products:", error);
+    return null;
+  }
+
+  // Create CSV header
+  const header = "name,actual_price,image_url,is_used\n";
+  
+  // Create CSV rows
+  const rows = data.map(product => {
+    const name = `"${product.name.replace(/"/g, '""')}"`;
+    const price = product.actual_price;
+    const imageUrl = `"${product.image_url.replace(/"/g, '""')}"`;
+    const isUsed = product.is_used;
+    return `${name},${price},${imageUrl},${isUsed}`;
+  }).join("\n");
+
+  return header + rows;
+}
+
 // Subscribe to game state changes
 export function subscribeToGameState(
   callback: (state: GameStateWithProduct) => void

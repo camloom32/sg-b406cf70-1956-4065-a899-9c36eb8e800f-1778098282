@@ -12,6 +12,7 @@ import {
   resetScores,
   resetAllProducts,
   importProductsFromCSV,
+  exportProductsToCSV,
   getRemainingProductsCount,
   updateTeamNames,
   startShowcaseRound,
@@ -25,6 +26,7 @@ import {
   Eye, 
   RotateCcw, 
   Upload, 
+  Download,
   Trophy,
   DollarSign,
   AlertCircle,
@@ -310,6 +312,36 @@ export default function HostController() {
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  };
+
+  const handleExportCSV = async () => {
+    setIsLoading(true);
+    const csvData = await exportProductsToCSV();
+    
+    if (csvData) {
+      // Create blob and download
+      const blob = new Blob([csvData], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `products_export_${new Date().toISOString().split("T")[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Export Successful!",
+        description: "Products have been exported to CSV.",
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Export Failed",
+        description: "Could not export products.",
+      });
+    }
+    setIsLoading(false);
   };
 
   const formatPrice = (price: number) => {
@@ -648,6 +680,16 @@ export default function HostController() {
                   CSV format: name, actual_price, image_url
                 </p>
               </div>
+
+              <Button 
+                onClick={handleExportCSV}
+                disabled={isLoading}
+                variant="outline"
+                className="w-full"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export Products (CSV)
+              </Button>
             </CardContent>
           </Card>
         </div>
