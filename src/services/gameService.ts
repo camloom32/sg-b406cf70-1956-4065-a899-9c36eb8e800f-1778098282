@@ -376,20 +376,35 @@ export async function getShowcasePackages(): Promise<{ showcase1: ShowcasePackag
     return { showcase1: null, showcase2: null };
   }
 
-  const showcase1Items = data.filter(item => item.showcase_id === 1);
-  const showcase2Items = data.filter(item => item.showcase_id === 2);
+  // Group by showcase_id and get the first two available showcases
+  const showcaseGroups = data.reduce((acc, item) => {
+    if (!acc[item.showcase_id]) {
+      acc[item.showcase_id] = [];
+    }
+    acc[item.showcase_id].push(item);
+    return acc;
+  }, {} as Record<number, ShowcaseItem[]>);
 
-  const showcase1: ShowcasePackage = {
-    showcase_id: 1,
+  const availableShowcaseIds = Object.keys(showcaseGroups).map(Number).sort((a, b) => a - b);
+
+  // Get first two showcases (regardless of their actual IDs)
+  const showcase1Id = availableShowcaseIds[0];
+  const showcase2Id = availableShowcaseIds[1];
+
+  const showcase1Items = showcase1Id ? showcaseGroups[showcase1Id] : [];
+  const showcase2Items = showcase2Id ? showcaseGroups[showcase2Id] : [];
+
+  const showcase1: ShowcasePackage | null = showcase1Items.length > 0 ? {
+    showcase_id: showcase1Id,
     items: showcase1Items,
     total_price: showcase1Items.reduce((sum, item) => sum + item.price_cad, 0)
-  };
+  } : null;
 
-  const showcase2: ShowcasePackage = {
-    showcase_id: 2,
+  const showcase2: ShowcasePackage | null = showcase2Items.length > 0 ? {
+    showcase_id: showcase2Id,
     items: showcase2Items,
     total_price: showcase2Items.reduce((sum, item) => sum + item.price_cad, 0)
-  };
+  } : null;
 
   return { showcase1, showcase2 };
 }
