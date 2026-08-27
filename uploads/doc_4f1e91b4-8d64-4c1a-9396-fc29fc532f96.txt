@@ -1,0 +1,7 @@
+Showcase_ID,Item_Type,Item_Name,Description,Price_CAD,Image_Prompt
+1,Vacation,Tokyo & Osaka,10-day luxury excursion for two with business class flights and 5-star hotels.,14200,A cinematic wide shot of Tokyo neon lights at night with a luxury hotel interior overlay.
+1,Appliance,Samsung Bespoke Suite,4-piece Matte Black kitchen set including AI refrigerator and induction range.,8800,A minimalist modern kitchen featuring sleek matte black appliances.
+1,Vehicle,2026 Mini Cooper SE,All-electric icon with panoramic sunroof and Harman Kardon audio.,49500,A shiny black 2026 Mini Cooper SE parked on a trendy urban street.
+2,Vacation,Yukon Wilderness Retreat,7 nights at an eco-lodge with dog-sledding and Northern Lights tours.,11500,The Aurora Borealis glowing over a luxury log cabin in the snowy Yukon.
+2,Appliance,Backyard Oasis,Napoleon Prestige PRO Grill and wood-fired outdoor pizza oven.,6400,A high-end stainless steel outdoor grill and pizza oven on a cedar deck.
+2,Vehicle,2026 Ford F-150 Lightning,Electric truck with Extended Range Battery and BlueCruise driving.,88200,A silver 2026 Ford F-150 Lightning truck driving on a rugged mountain road.

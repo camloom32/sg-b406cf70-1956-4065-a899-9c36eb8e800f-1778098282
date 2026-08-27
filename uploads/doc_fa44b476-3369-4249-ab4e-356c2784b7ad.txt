@@ -1,0 +1,126 @@
+Write File/Path: tmp/telegram-inbox/products_export_2026-04-11_updated.csv
+============================================================
+
+name,actual_price,image_url,is_used
+"Blow Molded Horizontal Storage Shed BMS4700 Suncast",858,"https://media-www.canadiantire.ca/product/seasonal-gardening/backyard-living/outdoor-storage/0600636/suncast-70-cu-ft-stow-away-horizontal-shed-8bfc43c0-9fbb-458e-8663-64cb28a47037-jpgrendition.jpg",false
+"Santorini 6-Piece Power Reclining Sectional - Walnut Leons",3499,"https://www.leons.ca/cdn/shop/files/Shopify_JPEG-Santorini_80H12661_Sect_SW_800x.jpg?v=1709136928",false
+"Non-Stick Rice Cooker & Steamer White, 16 Cups Black & Decker",29.99,"https://media-www.canadiantire.ca/product/living/kitchen/kitchen-appliances/0431373/black-decker-16-cup-rice-cooker-ac0875c9-093a-469f-aa88-b8733ef9d3b1-jpgrendition.jpg",false
+"Game Set, 3-pc Spikeball",89.99,"https://www.sportchek.ca/api/v1/product/api/v1/product/image/70331280f?baseStoreId=SC&lang=en_CA&subscription-key=c01ef3612328420c9f5cd9277e815a0e&imwidth=1244&impolicy=gZoom",false
+"Yellow Bird 500pc Round Puzzle eeBoo Blue Bird",26.99,"https://cdn.shoplightspeed.com/shops/634329/files/30229472/1600x2048x1/eeboo-blue-bird-yellow-bird-500pc-round-puzzle.jpg",false
+"SodaStream Pepsi Zero Sugar SodaStream",7.99,"https://sodastream.ca/cdn/shop/files/CA_RENDER_REFRESH_2023_PZ_440ML_no_shadow.png?v=1769183388&width=1000",false
+"Vertical Waffle Maker, Stainless Steel Cuisinart",69.99,"https://media-www.canadiantire.ca/product/living/kitchen/kitchen-appliances/0430054/cuisinart-vertical-waffle-maker-8bb95d2e-d648-40c1-bfc4-0b22d38117c0-jpgrendition.jpg",false
+"Paragon 2-Piece Sectional with Right-Facing Chaise - Charcoal Leons",1099,"https://www.leons.ca/cdn/shop/files/Shopify_JPEG-Paragon_23749172_Sect_3Qtr.jpg?pad_color=fff&v=1711383327&width=2048",false
+"Mobile Tire Stand, 220-lb MotoMaster",64.99,"https://media-www.canadiantire.ca/product/automotive/auto-maintenance/auto-shop-equipment-supplies/0091515/motomaster-mobile-tire-stand-de218edc-c1ec-419b-b32e-9104ba9bc7a9-jpgrendition.jpg",false
+"Storage Deck Box, 99-gal PDG",119.99,"https://media-www.canadiantire.ca/product/seasonal-gardening/backyard-living/outdoor-storage/3994929/recoded-to-0603504-35b0431b-116e-4144-9647-55ddc7a2e511.png",false
+"Harry Potter Hogwarts Clock Tower 75948 Lego",119.86,"https://www.lego.com/cdn/cs/set/assets/bltac4bd5826e26726f/75948.jpg?fit=crop&quality=80&width=800&height=800&dpr=1",false
+"Super Mario Bowsers Airship Expansion Set - 71391 Lego",123.17,"https://www.lego.com/cdn/cs/set/assets/blta9835299c86527a7/71391.jpg?fit=crop&quality=80&width=800&height=800&dpr=1",false
+"Disco Ball Karaoke KO3-13027-FR Frozen II",50,"https://i5.walmartimages.com/dfw/4ff9c6c9-ad46/k2-_0a671c38-d307-447c-835e-7904ab143c26.v1.png",false
+"Bolero 6-Piece Reclining Sectional - Grey Leons",2329,"https://www.leons.ca/cdn/shop/products/fx8oqdewogfc4bkyl41t.jpg?pad_color=fff&v=1571710244&width=1500",false
+"Fermented Vegan Proteins+ Bar, Strawberry Pistachio, 14g Protein, Gluten Free Genuine Health",27.99,"https://dr9wvh6oz7mzp.cloudfront.net/i/18e16afbd5ec7b09764e456d2f8c8910_ra,w806,h806_pa,w806,h806.jpg",false
+"4000 Foldable Table Tennis Ping Pong Table with Net Built-In Storage MATRIX",309.99,"https://media-www.canadiantire.ca/product/playing/team-sports-and-golf/sports-equipment-accessories/1840693/matrix-4000-table-tennis-table-4e4c4242-73b8-4fbb-9bd1-685b3f6c584f-jpgrendition.jpg",false
+"Premium Chocolate Fudge Brownie Ice Cream Chapman's",5.97,"https://www.chapmans.ca/wp-content/uploads/2019/06/062942000722_f_en.png",false
+"Francesca 2-Piece Power Reclining Sectional with Left-Facing Chaise - Starburst Metal Leons",1999,"https://www.leons.ca/cdn/shop/products/16456512_Francesca_SECT_3Qtr_1.jpg?pad_color=fff&v=1619017158&width=4400",false
+"Sven oxford blue sofa Article",2499,"https://cdn-images.article.com/products/SKU312E/2890x1500/image155817.jpg",false
+"Creator Pirate Ship 31109 Lego",149.99,"https://media-www.canadiantire.ca/product/seasonal-gardening/toys/toys-games/0502132/lego-creator-pirate-ship-a98db6f5-d3cf-4f5c-a748-92f26c9ebcee-jpgrendition.jpg",false
+"McCafé Medium Dark Roast Ground Coffee, 950-g McCafe",34.99,"https://images.cdn.saveonfoods.com/detail/00663447608347.jpg",false
+"Renfrew Conversation/Dining Sectional Set Canvas",1199.99,"https://media-www.canadiantire.ca/product/seasonal-gardening/backyard-living/outdoor-furniture/0882040/canvas-renfrew-convo-dining-sectional-set-fd71869b-eadf-4876-be4b-ed14a3220f73-jpgrendition.jpg",false
+"Classic Dark Chocolate Marzipan Bar 110g Niederegger",7.26,"https://dr9wvh6oz7mzp.cloudfront.net/i/dce2794574f4bc87964610322680d725_ra,w380,h380_pa,w380,h380.jpg",false
+"Sven Charme Tan Article",2499,"https://cdn-images.article.com/products/SKU312A/2890x1500/image230373.jpg",false
+"Plant Based Zimmunity Pasta 227g Bentilia",6.46,"https://qinatural.ca/cdn/shop/products/628055209638-removebg-preview.png?v=1673636776",false
+"GF840 Portable System, Black Karaoke USA",336.19,"https://m.media-amazon.com/images/I/51gYo24lRUL._AC_AC_.jpg",false
+"NINJAGO Ninja Dojo Temple - 71767 Lego",129.98,"https://www.lego.com/cdn/cs/set/assets/bltd1fa16687bb419b4/71767.png?fit=crop&quality=80&width=800&height=800&dpr=1",false
+"Scooter World Industries",62.99,"https://media-www.canadiantire.ca/product/playing/cycling/wheeled-goods/0847031/world-industries-scooter-120mm-99951ec3-fd25-46ac-a1a5-ac1f62f9bb39-jpgrendition.jpg",false
+"Avalon Leather Sofa - Grey Leons",999,"https://www.leons.ca/cdn/shop/files/Shopify_JPEG-Avalon_80A12210_S_3Qtr11.jpg?pad_color=fff&v=1705438816&width=2048",false
+"West Palm Outdoor/Patio Offset Umbrella w/ Base & Crank Handle, Grey, 10x10-ft Canvas",629.99,"https://www.canadiantire.ca/api/v1/product/api/v1/product/image/0882075p?baseStoreId=CTR&lang=en_CA&subscription-key=c01ef3612328420c9f5cd9277e815a0e&imwidth=1244&impolicy=gZoom",false
+"Linen-Look Fabric Chair - Blue Novalee",299.95,"https://cdn.shopify.com/s/files/1/2660/5202/products/shopify-image_ae2f5b1c-04ba-4b8d-b2fb-98b3c4e3386c_800x.jpg?v=1655915554",false
+"Bar Cookies 'N Cream Built",49.98,"https://i5.walmartimages.ca/images/Enlarge/588/523/6000209588523.jpg",false
+"17.5 cu. ft. Stainless Steel 33 in. Counter Depth French Door Refrigerator RF18A5101SR Samsung",1399.99,"https://images.samsung.com/is/image/samsung/p6pfim/p6pfim-gs-ame-u-s-rf18a5101sr-00-thumb-54721138509136_400.jpg",false
+"Oxelo Freestyle Scooter - MF 500 Blue Decathlon",120,"https://contents.mediadecathlon.com/p2146081/k$02b0494da83d827577e2191c4d58106d/picture.jpg",false
+"ELLEMIA MODULAR ARMLESS CHAISE Mobilia",639,"https://mobilia.ca/media/catalog/product/6/5/654829483_ellemia_composable-5_1_1.jpg",false
+"Creator Ferris Wheel 31119 LEGO",109.99,"https://www.lego.com/cdn/cs/set/assets/blt7db84b2f76d28ad2/31119.jpg",false
+"10-piece Wrench & Plier Set MasterCraft",29.99,"https://media-www.canadiantire.ca/product/fixing/tools/metal-working/0584791/mastercraft-plier-wrench-set-10-pieces-cb1cf8e5-ebc5-4001-8428-622f4ae8586f.png",false
+"MyTime Digital Programmable Slow Cooker, Stainless Steel, 6qt Crock-Pot",69.99,"https://newellbrands.imgix.net/dea5cfac-df52-3a89-9fd5-180f1b6d18c7/dea5cfac-df52-3a89-9fd5-180f1b6d18c7.jpg",false
+"Fermented Vegan Proteins+ Bar, Lemon Coconut, 14g Protein, Gluten Free Genuine Health",45.99,"https://www.auramarket.ca/cdn/shop/files/39936_1_355x355.jpg",false
+"Bala All-Weather Wicker Outdoor Patio Middle Chair Canvas",174.93,"https://media-www.canadiantire.ca/product/seasonal-gardening/backyard-living/outdoor-furniture/0880545/canvas-bala-armless-chair-6907d876-27f8-4be2-8eb5-c6d739c1abb4-jpgrendition.jpg",false
+"Dark Roast Ground Coffee, 875-g Tim Hortons",32.99,"https://timshop.timhortons.ca/cdn/shop/files/Original_Blend_875.png",false
+"Penelope Chair and a Half - Grey Leons",699,"https://www.leons.ca/cdn/shop/files/Shopify_JPEG-Penelope_80H10755_S_3Qtr11.jpg?pad_color=fff&v=1701356411&width=2048",false
+"Ginger Ale 355 mL Cans, 12 Pack Canada Dry",5.98,"https://www.canadiantire.ca/api/v1/product/image/0592514p",false
+"5W30 Synthetic Engine Oil, 4.73-L Mobil 1",37.99,"https://media-www.canadiantire.ca/product/automotive/auto-maintenance/oil-pcmo-/0289450/mobil-1-synthetic-5w30-4-73l-39a23bc8-6401-45a5-90e7-bb021e879ba0-jpgrendition.jpg",false
+"Micro Ant HEXBUG",9.99,"https://cdn.spinmasterstudios.com/hexbug/media/catalog/product/cache/d64bdfbef0647162ce6500508a887a85/m/i/micro_ant_orange_outpackage_3ql.jpg",false
+"Styler Steam Clothing Care System with Wi-Fi Asthma and Allergy Friendly S S3MFBN LG Electronics",1895,"https://www.lg.com/content/dam/channel/wcms/ca_en/images/ultimatelaundryroom/s3mfbn_almeeus_enci_ca_en_c/gallery/DZ-11.jpg",false
+"Fizzi One Touch Soda Machine - Black 1011811115 SodaStream",79.97,"https://multimedia.bbycastatic.ca/multimedia/products/500x500/133/13391/13391354.jpg",false
+"Roasted Walnut Oil 500mL La Tourangelle",13.19,"https://cloudinary.images-iherb.com/image/upload/f_auto,q_auto:eco/images/lat/lat00001/k/35.jpg",false
+"Tap & Die Set with Case, 86-pc Maximum",99.99,"https://media-www.canadiantire.ca/product/fixing/tools/metal-working/0587201/maximum-86pc-titanium-coated-tap-die-set-with-case-bbe95074-04c4-4a44-97ae-c39b785a46c1-jpgrendition.jpg",false
+"70 cu. ft. Ultra Shed 17199419 Keter",649,"https://images.homedepot.ca/productimages/p_1000736183.jpg",false
+"Skyline Aluminum & Galvanized Steel Frame, Hard Top Gazebo, 10-ft x 12-ft Canvas",1199.99,"https://media-www.canadiantire.ca/product/seasonal-gardening/backyard-living/outdoor-furniture/0881391/canvas-skyline-10-x-12-single-tier-gazebo-28bb9151-aa67-40b6-b563-e6a65bb21049-jpgrendition.jpg",false
+"Fermented Vegan Proteins+ Bar, Maple Walnut, 14g Protein, Gluten Free Genuine Health",18.49,"https://smhttp-ssl-68201.nexcesscdn.net/media/catalog/product/cache/1/image/250x350/9df78eab33525d08d6e5fb8d27136e95/g/h/gh04097_2.1775069825.jpg",false
+"Starbucks Pike Place Coffee Capsules, 100-g, 8-pk Nespresso",12.99,"https://media-www.canadiantire.ca/product/living/food-drink/single-serve-beverages/1534123/starbucks-by-nespresso-vertuo-pike-place-8-ct-c94d3a6b-711c-4e81-9cd6-ef2a933c5484-jpgrendition.jpg",false
+"Cordless Electric Kettle w/ Auto Shut Off, Stainless Steel, 1.7L Black & Decker",29.99,"https://media-www.canadiantire.ca/product/living/kitchen/kitchen-appliances/0431027/black-and-decker-stainless-steel-1-7l-kettle-44bbe2bb-06a8-4301-aa73-48b4a8e72e5d-jpgrendition.jpg",false
+"Bala Sectional Patio Set, 6-pc CANVAS",999.93,"https://media-www.canadiantire.ca/product/seasonal-gardening/backyard-living/outdoor-furniture/0882042/canvas-bala-6-piece-sectional-set-5e44e545-973f-4a11-8d65-258d7bd00ba6-jpgrendition.jpg",false
+"Angus Steak 1.4kg Black River",35.97,"https://i5.walmartimages.com/dfw/4ff9c6c9-ad46/k2-_0a671c38-d307-447c-835e-7904ab143c26.v1.png",false
+"11.5 ft. UV Resistant Deluxe Offset Sand Grey Patio Umbrella Corliving",398,"https://images.homedepot.ca/productimages/p_1001058127.jpg",false
+"Sandstone Outdoor Patio Conversation Set w Tempered Glass Tabletop 4-pc FOR LIVING",649.99,"https://media-www.canadiantire.ca/product/seasonal-gardening/backyard-living/outdoor-furniture/0882059/for-living-sandstone-4-piece-wicker-conversation-set-91a913e0-c346-40f3-9d49-6836d9e56e25-jpgrendition.jpg",false
+"Griddler - CGR-4NEC Cuisinart",109.99,"https://www.cuisinart.ca/dw/image/v2/ABAF_PRD/on/demandware.static/-/Sites-master-ca/default/dw9ef84c88/CGR-4NEC_4.jpg",false
+"Sydney Double Egg Swing CANVAS",799.99,"https://media-www.canadiantire.ca/product/seasonal-gardening/backyard-living/outdoor-furniture/0882289/canvas-sydney-double-egg-swing-8fe0ad80-2468-4d21-861f-db09236fbdfc-jpgrendition.jpg",false
+"Disney Stitch Building Set - 43229 730-pcs Ages 9 Lego",74.99,"https://media-www.canadiantire.ca/product/seasonal-gardening/toys/preschool-toys-activities/1500955/lego-disney-clasic-5-2024-d215a54b-dd86-490f-b749-ebc1bb65dfd0-jpgrendition.jpg",false
+"Mosquito Repellent Refill Value Pack Thermacell",29.99,"https://www.sportchek.ca/api/v1/product/api/v1/product/image/70307851f",false
+"Endangered Dark Chocolate Bar with Sea Salt & Almonds 72% Cocoa 85 g",8.49,"https://dkhl0wfjfnonz.cloudfront.net/media/resized/e2363d6c372a9b16cbd56480171e9150/700x700/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/a/l/almonds_and_sea_salt1x.png",false
+"TV 4K Apple",179,"https://www.apple.com/v/apple-tv-4k/am/images/overview/hero/hero_tv_hw__e1vadywlvcmu_large.jpg",false
+"Nano 5-Pack HEXBUG",29.99,"https://cdn.spinmasterstudios.com/hexbug/media/catalog/product/cache/d64bdfbef0647162ce6500508a887a85/n/a/nano_5pk_toy_blue_left_v01_05112020.jpg",false
+"Brain String Advanced Brain Puzzle Recent Toys",24.99,"https://www.puzzlemaster.ca/imagecache/products/ffffff/640x640/000/000909.1668631102.jpg",false
+"Sutton 3-Piece Sectional with Right-Facing Chaise - Beige Leons",2699,"https://www.leons.ca/cdn/shop/files/Shopify_JPEG-Sutton_69217083_Sect_3Qtr_d81ae887-08b4-421b-893e-d676789faf91.jpg?pad_color=fff&v=1702652967&width=2048",false
+"Sven charme tan left sectional sofa Article",3999,"https://cdn-images.article.com/products/SKU337B/2890x1500/image169250.jpg?fit=max&w=1200&q=100",false
+"Source Sparkling Water Maker White SodaStream",99.98,"https://media-www.canadiantire.ca/product/living/kitchen/kitchen-appliances/0431256/sodastream-source-white-starter-kit-93dd6cbe-bea9-4516-bb0f-4de7d0d80456.png",false
+"11A Fixed & Plunge Base Router Mastercraft",129.99,"https://media-www.canadiantire.ca/product/fixing/tools/portable-power-tools/0546821/mastercraft-11a-fixed-and-plunge-base-router-c1f18341-7de7-45ed-8b47-4eee97a277af-jpgrendition.jpg",false
+"Skyline Outdoor Patio Hard-Top Gazebo w/ Bug Net, for All-Season, Black, 10x12-ft Canvas",1199.99,"https://media-www.canadiantire.ca/product/seasonal-gardening/backyard-living/outdoor-furniture/0882278/canvas-skyline-10-x-12-double-tier-gazebo-12bff935-2c03-4604-a6aa-3e5a08f43969-jpgrendition.jpg",false
+"Kort & Co. Kassia 40.9"" Linen-Look Fabric Chair with Wood Base and ... The Brick",679.95,"https://www.thebrick.com/cdn/shop/products/shopify-image_15ca4427-c560-42ef-835e-f01049a28c35_1500x.jpg?v=1662652026",false
+"Bluebay Outdoor Fire Table For Living",249.99,"https://www.canadiantire.ca/api/v1/product/image/0851577p?baseStoreId=CTR&lang=en_CA&subscription-key=c01ef3612328420c9f5cd9277e815a0e&imwidth=1244&impolicy=gZoom",false
+"Knock Box (BCB100) Breville",39.99,"https://multimedia.bbycastatic.ca/multimedia/products/500x500/136/13640/13640486.jpg",false
+"Mindblown Working Motor Engine Model Building Kit, Educational Toy, Ages 8+ Discovery",49.99,"https://media-www.canadiantire.ca/product/seasonal-gardening/toys/toys-games/0504958/discovery-motor-engine-fb27aaad-fe50-4098-8eb0-ac5171662d1d-jpgrendition.jpg",false
+"Turbo Extreme Steam Handheld Fabric Steamer GS38XC Conair",64.99,"https://images.homedepot.ca/productimages/p_1001581008.jpg?product-images=l",false
+"EastPoint Newcastle Foosball Soccer Game Table w/ 2 Balls, Wood Finish, 54-in EastPoint Sports",449.99,"https://www.canadiantire.ca/api/v1/product/image/0846161p?baseStoreId=CTR&lang=en_CA&subscription-key=c01ef3612328420c9f5cd9277e815a0e&imwidth=1244&impolicy=gZoom",false
+"EastPoint Fairmont Foosball Soccer Game Table with 2 Balls Wood Finish 48-in EastPoint Sports",209.99,"https://media-www.canadiantire.ca/product/playing/team-sports-and-golf/indoor-games/1840879/eastpoint-sports-48-fairmont-foosball-table-64891eb9-f552-41ef-84fd-aa917e89f0ba-jpgrendition.jpg",false
+"Store-It-Out Max Horizontal Shed Keter",349.99,"https://www.canadiantire.ca/api/v1/product/image/0600153p?baseStoreId=CTR&lang=en_CA&subscription-key=c01ef3612328420c9f5cd9277e815a0e&imwidth=1244&impolicy=gZoom",false
+"AT-TE Walker 75337 Lego",179.99,"https://www.lego.com/cdn/cs/set/assets/blt05cf4b74ee94dd14/75337.png?fit=crop&quality=80&width=800&height=800&dpr=1",false
+"Peru Medium Roast Organic Whole Bean Coffee, 2 x 907 g Level Ground",63.99,"https://levelground.com/cdn/shop/files/300gPERCFT_1000x.png?v=1729716106",false
+"Oscillating Parabolic Dish Radiating Heater Noma",66.99,"https://media-www.canadiantire.ca/product/fixing/home-environment/winter-climate-control/0435999/noma-oscillating-parablic-dish-radiating-heater-7aadd27c-3547-4a4d-9d9b-7d3e98ea2c47-jpgrendition.jpg",false
+"Oro Whole Bean Coffee, 1 kg Lavazza",33.99,"https://media-www.canadiantire.ca/product/living/food-drink/everyday-food-and-drink/1532580/lavazza-organic-whole-bean-coffee-1-kg-c9d43f74-ed54-4072-a378-f99d9120a515-jpgrendition.jpg",false
+"East Africa Dark Roast Organic Whole Bean Coffee, 2 x 907g Level Ground",63.99,"https://levelground.com/cdn/shop/files/300gCOLCFT_1445x.png?v=1729196424",false
+"Kingsley Oak 8.7-inch x 72-inch Luxury Vinyl Plank Flooring (26 sq. ft. / case) Lifeproof",128.23,"https://images.homedepot.ca/productimages/p_1001033629.jpg?product-images=l",false
+"Ember Swivel Glider Reclining Chair The Brick",599.95,"https://www.thebrick.com/cdn/shop/products/shopify-image_2a104940-7889-4eac-9900-8f85b4c7efe2_1500x.jpg?v=1709834627",false
+"CREAMi Ice Cream, Sorbet & Milkshake Maker w/ 7 One-Touch Programs, Silver NC301C Ninja",179.99,"https://assets.sharkninja.com/video/upload/q_auto/c_limit,h_1200,w_300/v1/storefront/products/NC301/NC301_HeroMarquee_PDP-Desktop-2880x1620_01.jpg",false
+"Composter with Two Chambers Tumbling",119.99,"https://images.homedepot.ca/productimages/p_1000710822.jpg?product-images=l",false
+"Spadina Folding Steel Outdoor/Patio Bistro Set, Grey, 3-pc Canvas",139.93,"https://media-www.canadiantire.ca/product/seasonal-gardening/backyard-living/outdoor-furniture/0882234/canvas-spadina-3-piece-folding-bistro-set-2e8d8d24-fca8-4fb7-bd91-f5d9a4b9df8c-jpgrendition.jpg",false
+"Breakfast Essentials, Breakfast Drink Mix, Chocolate 10x40g Sachets Carnation",7.27,"https://i5.walmartimages.com/dfw/4ff9c6c9-ad46/k2-_0a671c38-d307-447c-835e-7904ab143c26.v1.png",false
+"Eastpoint Game Sports Indoor Shuffleboard Table 9-ft EastPoint Sports",699.99,"https://media-www.canadiantire.ca/product/playing/team-sports-and-golf/indoor-games/1841286/eastpoint-sports-9-shuffleboard-table-7c4cdd89-d0b2-4acf-9653-c20be8dd8746-jpgrendition.jpg",false
+"Easy Fry Prestige XL T-Fal",79.97,"https://media-www.canadiantire.ca/product/living/kitchen/kitchen-appliances/0435732/t-fal-stainless-steel-air-fryer-09b2c751-e9d8-42b3-8555-5029a4a6023d-jpgrendition.jpg",false
+"Compact 1.7 Cu. Ft. Freestanding Bar Fridge (NS-CF17BK9) Insignia",99.95,"https://pisces.bbystatic.com/image2/BestBuy_US/images/products/6145/6145100_sd.jpg",false
+"Storage Shed Grey 963-L Suncast",319.93,"https://media-www.canadiantire.ca/product/seasonal-gardening/backyard-living/outdoor-storage/0603517/suncast-34-cu-ft-horizontal-shed-a6b5ac64-5867-49cc-9f48-3ac81ee76e68-jpgrendition.jpg",false
+"Discovery Puzzle Tantrix",2.69,"https://www.puzzlemaster.ca/imagecache/products/ffffff/640x640/000/000909.1668631102.jpg",false
+"Primo Plus 3-Wheel Scooter with Lights Globber",102.79,"https://media-www.canadiantire.ca/product/playing/cycling/wheeled-goods/0848994/globber-primo-scooter-blue-f3b8427b-488e-47da-91ca-f9e7b18e24b3-jpgrendition.jpg",false
+"Everett 2-Piece Sectional with Left-Facing Chaise - Grey Leons",980,"https://www.leons.ca/cdn/shop/files/Shopify_JPEG-Everett_43H80235_Sect_3Qtr_800x.jpg?v=1715195991",false
+"Vintage Butterflies 500pc Round Puzzle eeBoo",26.99,"https://toadhalltoys.ca/assets/images/products/15874_l.jpg",false
+"Coffee Brown Rattan Metal Stationary Chair with White Cushioned Seat Outsunny",573,"https://m.media-amazon.com/images/I/81X+pElNpJL._AC_SL1500_.jpg",false
+"4-Slice Touchscreen Toaster with Easy Touch Technology Oster",69.99,"https://media-www.canadiantire.ca/product/living/kitchen/kitchen-appliances/0430154/oster-4-slice-touchscreen-toaster-e0be3c10-1c78-4f03-8250-9719f6425ffe-jpgrendition.jpg",false
+"Breakfast Essentials, Breakfast Drink Mix, Chocolate 880 g Carnation",14.97,"https://i5.walmartimages.com/dfw/4ff9c6c9-ad46/k2-_0a671c38-d307-447c-835e-7904ab143c26.v1.png",false
+"Foodi PossibleCooker Pro 8-in-1 Multi-Cooker with 8 5 Quart Capacity Flat Matte Ninja",129.99,"https://www.canadiantire.ca/api/v1/product/api/v1/product/image/0430326p?baseStoreId=CTR&lang=en_CA&subscription-key=c01ef3612328420c9f5cd9277e815a0e&imwidth=1244&impolicy=gZoom",false
+"Ceni Volcanic Gray Sofa Article",2599,"https://cdn-images.article.com/products/SKU22200/2890x1500/image161903.jpg?fit=max&w=1200&q=100",false
+"Bevin 34.4"" Grey Chenille Fabric Swivel Glider Reclining Chair The Brick",599.95,"https://www.thebrick.com/cdn/shop/products/shopify-image_8d83b1ed-1c04-47a4-accb-d151d823f9c8_800x.jpg?v=1648236837",false
+"Non-Stick Rice Cooker, 6-Cup RC506C Black & Decker",19.99,"https://media-www.canadiantire.ca/product/living/kitchen/kitchen-appliances/0431372/black-decker-6-cup-rice-cooker-0e76bbc0-ebd0-433f-9449-f53a42227386-jpgrendition.jpg",false
+"Skyline Outdoor Patio Hard-Top Gazebo w/ Bug Net, for All-Season, Black, 12x14-ft CANVAS",1699.99,"https://www.canadiantire.ca/api/v1/product/api/v1/product/image/0882279p?baseStoreId=CTR&lang=en_CA&subscription-key=c01ef3612328420c9f5cd9277e815a0e&imwidth=1244&impolicy=gZoom",false
+"Creator Caravan Family Holiday 31108 Lego",99.99,"https://www.lego.com/cdn/cs/set/assets/blt3bc6a46024728887/31108.jpg?fit=bounds&format=jpg&quality=80&width=1500&height=1500&dpr=1",false
+"Mini Handheld Classic Arcade Game For Kids, Ages 8+ Pac-Man",32.99,"https://media-www.canadiantire.ca/product/seasonal-gardening/toys/toys-games/0505603/arcade-classics-pac-man-a25b8478-4fa9-459d-9669-1d8378328e2a-jpgrendition.jpg",false
+"Kraftform Plus Insulated Screwdriver Set 6pc Wera",53.99,"https://www.kmstools.com/media/catalog/product/cache/566b47ff56cd86a3e207e84e7af45cf2/w/e/wer-347777_1.jpg",false
+"2-Door Pantry Storage Cabinet, White Sauder",89.99,"https://media-www.canadiantire.ca/product/living/home-decor/furniture/1680054/sauder-2-door-cabinet-white-f0545828-c760-4b0b-b508-7aec8cd2e477-jpgrendition.jpg",false
+"Bala Rectangle Outdoor Patio Sectional Lounger Chair w UV-Resistant Cushions CANVAS",279.93,"https://media-www.canadiantire.ca/product/seasonal-gardening/backyard-living/outdoor-furniture/0882043/canvas-bala-lounger-b0be3fc6-85eb-4d1b-94dd-99fa227571d7-jpgrendition.jpg",false
+"Sparkling Water, Grapefruit, 355 Milliliter, 8 Count La Croix",7.79,"https://i5.walmartimages.com/asr/0e0b96c1-8c0e-4e88-9c18-7b4e8e8e8e8e.jpg",false
+"Kassia Linen-Look Loveseat - Blue The Brick",879.95,"https://www.thebrick.com/cdn/shop/products/shopify-image_3f5dac61-109d-4608-a839-55cd3fceb24b_800x.jpg?v=1662652285",false
+"Supreme Grind Auto Burr Mill BM-16PCC Cuisinart",69.99,"https://www.canadiantire.ca/api/v1/product/api/v1/product/image/0430435p?baseStoreId=CTR&lang=en_CA&imwidth=1244&impolicy=gZoom",false
+"Portable Induction Cooktop ID1948 Salton",59.98,"https://multimedia.bbycastatic.ca/multimedia/products/500x500/146/14689/14689887.jpeg",false
+"Elroy 33"" Rustic Round Lift Top Coffee Table With Storage, Shelf an... The Brick",299.95,"https://www.thebrick.com/cdn/shop/products/shopify-image_5f5f5f5f-1234-5678-90ab-cdef12345678_1500x.jpg",false
+"WARBI COFFEE TABLE Mobilia",398,"https://mobilia.ca/media/catalog/product/1/5/1529840873_warbi-coffee-table.jpg",false
+"Luke Skywalkers X-Wing Fighter 75301 LEGO",69.99,"https://www.lego.com/cdn/cs/set/assets/blte1238e85dc34c0a6/75301.jpg?fit=crop&quality=80&width=800&height=800&dpr=1",false
+"Sloane Leather Sofa- Chocolate Leons",2199,"https://www.leons.ca/cdn/shop/files/Shopify_JPEG-Sloane_80H11155_S_3Qtr11.jpg?pad_color=fff&v=1698427611&width=2048",false
+"Kasey 2-Piece Sectional with Left Facing Chaise - Grey Leons",1499,"https://www.leons.ca/cdn/shop/files/Shopify_JPEG-Kasey_43H80235_SECT_SW_800x.jpg?v=1715196054",false
+"Friends Heartlake City Grand Hotel (41684) Lego",139.99,"https://www.lego.com/cdn/cs/set/assets/blt4a2e1234567890ab/41684.jpg?fit=crop&quality=80&width=800&height=800&dpr=1",false
+"WiFi & Bluetooth Karaoke System with Wireless Microphones (ISM9022) - White- Only at Best Buy Singing machine",349.99,"https://multimedia.bbycastatic.ca/multimedia/products/500x500/179/17920/17920347.jpg",false

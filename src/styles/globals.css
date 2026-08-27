@@ -1,0 +1,155 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer base {
+  :root {
+    --radius: 0.75rem;
+    
+    /* Game Show Color Palette */
+    --background: 220 20% 97%;
+    --foreground: 220 40% 13%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 220 40% 13%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 40% 13%;
+    
+    /* Vibrant Blue Primary */
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Light Blue Secondary */
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 220 40% 13%;
+    
+    --muted: 210 40% 96%;
+    --muted-foreground: 220 15% 46%;
+    
+    /* Sunny Yellow Accent */
+    --accent: 43 96% 56%;
+    --accent-foreground: 220 40% 13%;
+    
+    /* Orange for energy */
+    --destructive: 24 95% 53%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 217 91% 60%;
+    
+    /* Game-specific colors */
+    --team-1: 217 91% 60%;
+    --team-2: 24 95% 53%;
+    --winner: 142 76% 36%;
+    --gold: 43 96% 56%;
+    
+    --chart-1: 217 91% 60%;
+    --chart-2: 24 95% 53%;
+    --chart-3: 142 76% 36%;
+    --chart-4: 43 96% 56%;
+    --chart-5: 280 65% 60%;
+    
+    --sidebar: 220 20% 97%;
+    --sidebar-foreground: 220 40% 13%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 43 96% 56%;
+    --sidebar-accent-foreground: 220 40% 13%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217 91% 60%;
+  }
+
+  .dark {
+    --radius: 0.75rem;
+    --background: 220 40% 8%;
+    --foreground: 0 0% 98%;
+    
+    --card: 220 40% 12%;
+    --card-foreground: 0 0% 98%;
+    
+    --popover: 220 40% 12%;
+    --popover-foreground: 0 0% 98%;
+    
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 220 30% 18%;
+    --secondary-foreground: 0 0% 98%;
+    
+    --muted: 220 30% 18%;
+    --muted-foreground: 220 15% 65%;
+    
+    --accent: 43 96% 56%;
+    --accent-foreground: 220 40% 13%;
+    
+    --destructive: 24 95% 53%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 220 30% 22%;
+    --input: 220 30% 22%;
+    --ring: 217 91% 60%;
+    
+    --team-1: 217 91% 60%;
+    --team-2: 24 95% 53%;
+    --winner: 142 76% 45%;
+    --gold: 43 96% 56%;
+    
+    --chart-1: 217 91% 60%;
+    --chart-2: 24 95% 53%;
+    --chart-3: 142 76% 45%;
+    --chart-4: 43 96% 56%;
+    --chart-5: 280 65% 60%;
+    
+    --sidebar: 220 40% 10%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 43 96% 56%;
+    --sidebar-accent-foreground: 220 40% 13%;
+    --sidebar-border: 220 30% 22%;
+    --sidebar-ring: 217 91% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+}
+
+@layer components {
+  .container {
+    @apply mx-auto px-4 md:px-6 lg:px-8 max-w-7xl w-full;
+  }
+}
+
+@layer utilities {
+  .game-gradient {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+  }
+  
+  .text-shadow-lg {
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  .animate-bounce-slow {
+    animation: bounce 2s infinite;
+  }
+}
