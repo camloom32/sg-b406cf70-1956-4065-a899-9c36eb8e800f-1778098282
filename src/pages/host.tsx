@@ -40,12 +40,15 @@ export default function HostController() {
   const [gameState, setGameState] = useState<GameStateWithProduct | null>(null);
   const [team1Guess, setTeam1Guess] = useState("");
   const [team2Guess, setTeam2Guess] = useState("");
+  const [team3Guess, setTeam3Guess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [remainingProducts, setRemainingProducts] = useState(0);
   const [team1Name, setTeam1Name] = useState("");
   const [team2Name, setTeam2Name] = useState("");
+  const [team3Name, setTeam3Name] = useState("");
   const [team1ShowcaseGuess, setTeam1ShowcaseGuess] = useState("");
   const [team2ShowcaseGuess, setTeam2ShowcaseGuess] = useState("");
+  const [team3ShowcaseGuess, setTeam3ShowcaseGuess] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -63,6 +66,7 @@ export default function HostController() {
       if (newState) {
         setTeam1Name(newState.team_1_name || "Team 1");
         setTeam2Name(newState.team_2_name || "Team 2");
+        setTeam3Name(newState.team_3_name || "Team 3");
       }
     });
     return () => unsubscribe();
@@ -74,6 +78,7 @@ export default function HostController() {
     if (success) {
       setTeam1Guess("");
       setTeam2Guess("");
+      setTeam3Guess("");
       const count = await getRemainingProductsCount();
       setRemainingProducts(count);
       toast({
@@ -93,31 +98,32 @@ export default function HostController() {
   const handleSubmitGuesses = async () => {
     const guess1 = parseFloat(team1Guess);
     const guess2 = parseFloat(team2Guess);
+    const guess3 = parseFloat(team3Guess);
 
-    if (isNaN(guess1) || isNaN(guess2)) {
+    if (isNaN(guess1) || isNaN(guess2) || isNaN(guess3)) {
       toast({
         variant: "destructive",
         title: "Invalid Guesses",
-        description: "Please enter valid numbers for both teams.",
+        description: "Please enter valid numbers for all teams.",
       });
       return;
     }
 
     setIsLoading(true);
-    await submitGuesses(guess1, guess2);
+    await submitGuesses(guess1, guess2, guess3);
     toast({
       title: "Guesses Submitted",
-      description: "Both team guesses have been recorded.",
+      description: "All team guesses have been recorded.",
     });
     setIsLoading(false);
   };
 
   const handleReveal = async () => {
-    if (!gameState?.team_1_guess || !gameState?.team_2_guess) {
+    if (!gameState?.team_1_guess || !gameState?.team_2_guess || !gameState?.team_3_guess) {
       toast({
         variant: "destructive",
         title: "Missing Guesses",
-        description: "Please submit guesses for both teams first.",
+        description: "Please submit guesses for all teams first.",
       });
       return;
     }
@@ -132,6 +138,7 @@ export default function HostController() {
     await resetScores();
     setTeam1Guess("");
     setTeam2Guess("");
+    setTeam3Guess("");
     toast({
       title: "Scores Reset",
       description: "All scores have been reset to zero.",
@@ -153,7 +160,7 @@ export default function HostController() {
 
   const handleUpdateTeamNames = async () => {
     setIsLoading(true);
-    const success = await updateTeamNames(team1Name, team2Name);
+    const success = await updateTeamNames(team1Name, team2Name, team3Name);
     if (success) {
       toast({
         title: "Team Names Updated",
@@ -175,6 +182,7 @@ export default function HostController() {
     if (success) {
       setTeam1ShowcaseGuess("");
       setTeam2ShowcaseGuess("");
+      setTeam3ShowcaseGuess("");
       toast({
         title: "Showcase Round Started!",
         description: "The showcase packages are now displayed on the TV.",
@@ -192,31 +200,32 @@ export default function HostController() {
   const handleSubmitShowcaseGuesses = async () => {
     const guess1 = parseFloat(team1ShowcaseGuess);
     const guess2 = parseFloat(team2ShowcaseGuess);
+    const guess3 = parseFloat(team3ShowcaseGuess);
 
-    if (isNaN(guess1) || isNaN(guess2)) {
+    if (isNaN(guess1) || isNaN(guess2) || isNaN(guess3)) {
       toast({
         variant: "destructive",
         title: "Invalid Guesses",
-        description: "Please enter valid numbers for both teams.",
+        description: "Please enter valid numbers for all teams.",
       });
       return;
     }
 
     setIsLoading(true);
-    await submitShowcaseGuesses(guess1, guess2);
+    await submitShowcaseGuesses(guess1, guess2, guess3);
     toast({
       title: "Showcase Guesses Submitted",
-      description: "Both team guesses have been recorded.",
+      description: "All team guesses have been recorded.",
     });
     setIsLoading(false);
   };
 
   const handleRevealShowcase = async () => {
-    if (!gameState?.team_1_showcase_guess || !gameState?.team_2_showcase_guess) {
+    if (!gameState?.team_1_showcase_guess || !gameState?.team_2_showcase_guess || !gameState?.team_3_showcase_guess) {
       toast({
         variant: "destructive",
         title: "Missing Guesses",
-        description: "Please submit showcase guesses for both teams first.",
+        description: "Please submit showcase guesses for all teams first.",
       });
       return;
     }
@@ -396,6 +405,16 @@ export default function HostController() {
                   className="h-12"
                 />
               </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-team3">Team 3 Name</label>
+                <Input
+                  type="text"
+                  placeholder="Team 3"
+                  value={team3Name}
+                  onChange={(e) => setTeam3Name(e.target.value)}
+                  className="h-12"
+                />
+              </div>
               <Button 
                 onClick={handleUpdateTeamNames} 
                 disabled={isLoading}
@@ -409,24 +428,34 @@ export default function HostController() {
           </Card>
 
           {/* Scores Display */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             <Card className="border-2 border-team1">
-              <CardContent className="p-4 text-center">
-                <p className="text-sm font-semibold text-muted-foreground">
+              <CardContent className="p-3 text-center">
+                <p className="text-xs font-semibold text-muted-foreground truncate">
                   {gameState?.team_1_name || "Team 1"}
                 </p>
-                <p className="text-4xl font-extrabold text-team1">
+                <p className="text-3xl font-extrabold text-team1">
                   {gameState?.team_1_score || 0}
                 </p>
               </CardContent>
             </Card>
             <Card className="border-2 border-team2">
-              <CardContent className="p-4 text-center">
-                <p className="text-sm font-semibold text-muted-foreground">
+              <CardContent className="p-3 text-center">
+                <p className="text-xs font-semibold text-muted-foreground truncate">
                   {gameState?.team_2_name || "Team 2"}
                 </p>
-                <p className="text-4xl font-extrabold text-team2">
+                <p className="text-3xl font-extrabold text-team2">
                   {gameState?.team_2_score || 0}
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="border-2 border-team3">
+              <CardContent className="p-3 text-center">
+                <p className="text-xs font-semibold text-muted-foreground truncate">
+                  {gameState?.team_3_name || "Team 3"}
+                </p>
+                <p className="text-3xl font-extrabold text-team3">
+                  {gameState?.team_3_score || 0}
                 </p>
               </CardContent>
             </Card>
@@ -530,9 +559,22 @@ export default function HostController() {
                       step="0.01"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-team3">
+                      {gameState?.team_3_name || "Team 3"} Guess ($)
+                    </label>
+                    <Input
+                      type="number"
+                      placeholder={`Enter ${gameState?.team_3_name || "Team 3"}'s guess`}
+                      value={team3Guess}
+                      onChange={(e) => setTeam3Guess(e.target.value)}
+                      className="h-12 text-lg font-mono"
+                      step="0.01"
+                    />
+                  </div>
                   <Button 
                     onClick={handleSubmitGuesses} 
-                    disabled={isLoading || !team1Guess || !team2Guess}
+                    disabled={isLoading || !team1Guess || !team2Guess || !team3Guess}
                     className="w-full h-12"
                     variant="secondary"
                   >
@@ -604,9 +646,22 @@ export default function HostController() {
                       step="0.01"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-team3">
+                      {gameState?.team_3_name || "Team 3"} Showcase Guess ($)
+                    </label>
+                    <Input
+                      type="number"
+                      placeholder={`Enter ${gameState?.team_3_name || "Team 3"}'s showcase guess`}
+                      value={team3ShowcaseGuess}
+                      onChange={(e) => setTeam3ShowcaseGuess(e.target.value)}
+                      className="h-12 text-lg font-mono"
+                      step="0.01"
+                    />
+                  </div>
                   <Button 
                     onClick={handleSubmitShowcaseGuesses} 
-                    disabled={isLoading || !team1ShowcaseGuess || !team2ShowcaseGuess}
+                    disabled={isLoading || !team1ShowcaseGuess || !team2ShowcaseGuess || !team3ShowcaseGuess}
                     className="w-full h-12"
                     variant="secondary"
                   >

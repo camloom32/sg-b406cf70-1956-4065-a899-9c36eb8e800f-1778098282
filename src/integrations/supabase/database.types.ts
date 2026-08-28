@@ -31,6 +31,11 @@ export type Database = {
           team_2_score: number | null
           team_2_showcase_guess: number | null
           team_2_showcase_id: number | null
+          team_3_name: string | null
+          team_3_score: number | null
+          team_3_guess: number | null
+          team_3_showcase_guess: number | null
+          team_3_showcase_id: number | null
           updated_at: string | null
         }
         Insert: {
@@ -48,6 +53,11 @@ export type Database = {
           team_2_score?: number | null
           team_2_showcase_guess?: number | null
           team_2_showcase_id?: number | null
+          team_3_name?: string | null
+          team_3_score?: number | null
+          team_3_guess?: number | null
+          team_3_showcase_guess?: number | null
+          team_3_showcase_id?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -65,6 +75,11 @@ export type Database = {
           team_2_score?: number | null
           team_2_showcase_guess?: number | null
           team_2_showcase_id?: number | null
+          team_3_name?: string | null
+          team_3_score?: number | null
+          team_3_guess?: number | null
+          team_3_showcase_guess?: number | null
+          team_3_showcase_id?: number | null
           updated_at?: string | null
         }
         Relationships: [

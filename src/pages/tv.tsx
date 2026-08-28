@@ -1,126 +1,128 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { SEO } from "@/components/SEO";
 import { 
   getGameState, 
   subscribeToGameState,
   getShowcasePackages,
   type GameStateWithProduct,
-  type ShowcasePackage 
+  type ShowcasePackage,
+  type TeamId 
 } from "@/services/gameService";
-import { Trophy, DollarSign, Users, Maximize } from "lucide-react";
+import { Trophy, DollarSign, Users } from "lucide-react";
 
 export default function TVDisplay() {
   const [gameState, setGameState] = useState<GameStateWithProduct | null>(null);
   const [showWinnerAnimation, setShowWinnerAnimation] = useState(false);
-  const [winner, setWinner] = useState<"team1" | "team2" | "none" | null>(null);
+  const [winner, setWinner] = useState<TeamId | "none" | null>(null);
   const [showcase1, setShowcase1] = useState<ShowcasePackage | null>(null);
   const [showcase2, setShowcase2] = useState<ShowcasePackage | null>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const [showcase3, setShowcase3] = useState<ShowcasePackage | null>(null);
+  const [slideIndex, setSlideIndex] = useState(0);
+
+  const playThemeSong = useCallback(() => {
+    const audio = new Audio("https://archive.org/download/tvtunes_31262/The%20Price%20is%20Right%20-%20Main.mp3");
+    audio.volume = 0.3;
+    audio.loop = true;
+    audio.play().catch(() => {});
+    setTimeout(() => { audio.pause(); audio.currentTime = 0; }, 15000);
+  }, []);
+
+  const determineWinner = useCallback((
+    actualPrice: number,
+    guesses: Record<TeamId, number | null>
+  ): TeamId | "none" => {
+    const validTeams = (Object.entries(guesses) as [TeamId, number | null][])
+      .filter(([, g]) => g !== null)
+      .map(([team, g]) => ({ team, diff: actualPrice - g! }));
+
+    const underTeams = validTeams.filter(t => t.diff >= 0);
+
+    if (underTeams.length === 0) return "none";
+
+    let closest = underTeams[0];
+    for (let i = 1; i < underTeams.length; i++) {
+      if (underTeams[i].diff < closest.diff) {
+        closest = underTeams[i];
+      }
+    }
+    return closest.team;
+  }, []);
 
   const loadGameState = useCallback(async () => {
     const state = await getGameState();
     setGameState(state);
   }, []);
 
-  const toggleFullscreen = async () => {
-    try {
-      if (!document.fullscreenElement) {
-        await document.documentElement.requestFullscreen();
-        setIsFullscreen(true);
-      } else {
-        await document.exitFullscreen();
-        setIsFullscreen(false);
-      }
-    } catch (error) {
-      console.error("Fullscreen error:", error);
-    }
-  };
-
   useEffect(() => {
     loadGameState();
 
     const unsubscribe = subscribeToGameState((newState) => {
-      // Check if we just transitioned to revealed
       if (newState.game_stage === "revealed" && gameState?.game_stage !== "revealed") {
-        // Determine winner for animation
-        if (newState.product && newState.team_1_guess !== null && newState.team_2_guess !== null) {
-          const actualPrice = newState.product.actual_price;
-          const team1Diff = actualPrice - newState.team_1_guess;
-          const team2Diff = actualPrice - newState.team_2_guess;
-
-          if (team1Diff < 0 && team2Diff < 0) {
-            setWinner("none");
-          } else if (team1Diff < 0) {
-            setWinner("team2");
-          } else if (team2Diff < 0) {
-            setWinner("team1");
-          } else if (team1Diff <= team2Diff) {
-            setWinner("team1");
-          } else {
-            setWinner("team2");
-          }
+        if (newState.product && newState.team_1_guess !== null && newState.team_2_guess !== null && newState.team_3_guess !== null) {
+          const w = determineWinner(newState.product.actual_price, {
+            team1: newState.team_1_guess,
+            team2: newState.team_2_guess,
+            team3: newState.team_3_guess,
+          });
+          setWinner(w);
           setShowWinnerAnimation(true);
           setTimeout(() => setShowWinnerAnimation(false), 5000);
         }
       }
 
-      // Load showcase packages when showcase round starts
       if ((newState.game_stage === "showcase" || newState.game_stage === "showcase_revealed") && 
           (gameState?.game_stage !== "showcase" && gameState?.game_stage !== "showcase_revealed")) {
-        getShowcasePackages().then(({ showcase1, showcase2 }) => {
+        getShowcasePackages().then(({ showcase1, showcase2, showcase3 }) => {
           setShowcase1(showcase1);
           setShowcase2(showcase2);
+          setShowcase3(showcase3);
         });
       }
 
-      // Handle showcase reveal animation
       if (newState.game_stage === "showcase_revealed" && gameState?.game_stage === "showcase") {
-        if (showcase1 && showcase2 && newState.team_1_showcase_guess !== null && newState.team_2_showcase_guess !== null) {
-          const team1Diff = showcase1.total_price - newState.team_1_showcase_guess;
-          const team2Diff = showcase2.total_price - newState.team_2_showcase_guess;
+        if (showcase1 && showcase2 && showcase3 && newState.team_1_showcase_guess !== null && newState.team_2_showcase_guess !== null && newState.team_3_showcase_guess !== null) {
+          const w = determineWinner(showcase1.total_price, {
+            team1: newState.team_1_showcase_guess,
+            team2: newState.team_2_showcase_guess,
+            team3: newState.team_3_showcase_guess,
+          });
+          // For showcase, each team compares against their own showcase
+          const showcasePrices: Record<TeamId, number> = {
+            team1: showcase1.total_price,
+            team2: showcase2.total_price,
+            team3: showcase3.total_price,
+          };
+          const diffs: Record<TeamId, number> = {
+            team1: showcase1.total_price - newState.team_1_showcase_guess,
+            team2: showcase2.total_price - newState.team_2_showcase_guess,
+            team3: showcase3.total_price - newState.team_3_showcase_guess,
+          };
+          const teams: TeamId[] = ["team1", "team2", "team3"];
+          const underTeams = teams.filter(t => diffs[t] >= 0);
 
-          if (team1Diff < 0 && team2Diff < 0) {
-            setWinner("none");
-          } else if (team1Diff < 0) {
-            setWinner("team2");
-            // Play theme song for winner
-            if (audioRef.current) {
-              audioRef.current.volume = 0.3;
-              audioRef.current.play().catch(err => console.log("Audio play error:", err));
-            }
-          } else if (team2Diff < 0) {
-            setWinner("team1");
-            // Play theme song for winner
-            if (audioRef.current) {
-              audioRef.current.volume = 0.3;
-              audioRef.current.play().catch(err => console.log("Audio play error:", err));
-            }
-          } else if (team1Diff <= team2Diff) {
-            setWinner("team1");
-            // Play theme song for winner
-            if (audioRef.current) {
-              audioRef.current.volume = 0.3;
-              audioRef.current.play().catch(err => console.log("Audio play error:", err));
-            }
+          let showcaseWinner: TeamId | "none" = "none";
+          if (underTeams.length === 0) {
+            showcaseWinner = "none";
           } else {
-            setWinner("team2");
-            // Play theme song for winner
-            if (audioRef.current) {
-              audioRef.current.volume = 0.3;
-              audioRef.current.play().catch(err => console.log("Audio play error:", err));
+            let closest = underTeams[0];
+            for (let i = 1; i < underTeams.length; i++) {
+              // Compare as percentage difference for fairness across different showcasess
+              const closestPct = Math.abs(diffs[closest]) / showcasePrices[closest];
+              const currentPct = Math.abs(diffs[underTeams[i]]) / showcasePrices[underTeams[i]];
+              if (currentPct < closestPct) {
+                closest = underTeams[i];
+              }
             }
+            showcaseWinner = closest;
+          }
+
+          setWinner(showcaseWinner);
+          
+          if (showcaseWinner !== "none") {
+            playThemeSong();
           }
           setShowWinnerAnimation(true);
           setTimeout(() => setShowWinnerAnimation(false), 5000);
-        }
-      }
-
-      // Stop music when leaving showcase_revealed stage
-      if (gameState?.game_stage === "showcase_revealed" && newState.game_stage !== "showcase_revealed") {
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current.currentTime = 0;
         }
       }
 
@@ -128,7 +130,7 @@ export default function TVDisplay() {
     });
 
     return () => unsubscribe();
-  }, [loadGameState, gameState?.game_stage, showcase1, showcase2]);
+  }, [loadGameState, gameState?.game_stage, showcase1, showcase2, showcase3, determineWinner, playThemeSong]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -137,25 +139,47 @@ export default function TVDisplay() {
     }).format(price);
   };
 
+  const teamColorClass = (team: TeamId) => {
+    switch (team) {
+      case "team1": return "bg-team1";
+      case "team2": return "bg-team2";
+      case "team3": return "bg-team3";
+    }
+  };
+
+  const teamFadedClass = (team: TeamId) => {
+    switch (team) {
+      case "team1": return "bg-team1/50";
+      case "team2": return "bg-team2/50";
+      case "team3": return "bg-team3/50";
+    }
+  };
+
+  const teamBorderClass = (team: TeamId, isActive: boolean) => {
+    if (!isActive) return teamFadedClass(team);
+    return teamColorClass(team);
+  };
+
+  const isShowcase = gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed";
+
+  useEffect(() => {
+    if (!isShowcase) { setSlideIndex(0); return; }
+    const timer = setInterval(() => setSlideIndex(i => (i + 1) % 3), 5000);
+    return () => clearInterval(timer);
+  }, [isShowcase]);
+
   return (
     <>
       <SEO title="The Price is Right - TV Display" />
-      
-      {/* Background Music for Showcase Winner */}
-      <audio
-        ref={audioRef}
-        src="https://archive.org/download/tvtunes_31262/The%20Price%20is%20Right%20-%20Main.mp3"
-        loop
-      />
 
       <div className="min-h-screen h-screen bg-gradient-to-br from-primary via-blue-600 to-blue-800 text-white overflow-hidden flex flex-col">
         {/* Fullscreen Button */}
         <button
-          onClick={toggleFullscreen}
-          className="fixed top-4 right-4 z-50 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg p-3 shadow-lg transition-all"
+          onClick={() => { document.documentElement.requestFullscreen().catch(() => {}); }}
+          className="fixed top-3 right-3 z-50 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg p-2 shadow-lg transition-all"
           aria-label="Toggle Fullscreen"
         >
-          <Maximize className="w-6 h-6" />
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
         </button>
 
         {/* Confetti Animation */}
@@ -181,65 +205,35 @@ export default function TVDisplay() {
           </div>
         )}
 
-        {/* Header with Scores - Optimized for 16:9 */}
-        <header className={gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "px-8 py-3" : "px-8 py-6"}>
-          <div className="flex items-center justify-between gap-8 max-w-[1920px] mx-auto">
-            {/* Team 1 Score */}
-            <div className="flex-1 max-w-md">
-              <div className={`bg-team1 rounded-2xl shadow-2xl transform transition-all duration-300 ${
-                gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "p-3" : "p-6"
-              } ${showWinnerAnimation && winner === "team1" ? "animate-winner-pulse ring-4 ring-gold" : ""}`}>
-                <div className={`flex items-center gap-3 ${gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "mb-1" : "mb-2"}`}>
-                  <Users className={gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "w-5 h-5" : "w-8 h-8"} />
-                  <span className={`font-bold truncate ${gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "text-lg" : "text-2xl"}`}>
-                    {gameState?.team_1_name?.toUpperCase() || "TEAM 1"}
-                  </span>
+        {/* Header with Scores - Compact for 3 teams */}
+        <header className="px-4 py-2">
+          <div className="flex items-center justify-between gap-2 max-w-[1920px] mx-auto">
+            {(["team1", "team2", "team3"] as TeamId[]).map((team) => {
+              const num = team === "team1" ? "1" : team === "team2" ? "2" : "3";
+              const score = gameState?.[`team_${num}_score` as keyof GameStateWithProduct] as number || 0;
+              const name = gameState?.[`team_${num}_name` as keyof GameStateWithProduct] as string || `Team ${num}`;
+              const colorClass = team === "team1" ? "bg-team1" : team === "team2" ? "bg-team2" : "bg-team3";
+              return (
+                <div key={team} className="flex-1">
+                  <div className={`${colorClass} rounded-xl p-2 shadow-lg ${showWinnerAnimation && winner === team ? "animate-winner-pulse ring-4 ring-gold" : ""}`}>
+                    <div className="flex items-center gap-1 mb-0.5">
+                      <Users className="w-3 h-3" />
+                      <span className="font-bold truncate text-sm">{name.toUpperCase()}</span>
+                    </div>
+                    <div className="font-extrabold text-3xl">{score}</div>
+                  </div>
                 </div>
-                <div className={`font-extrabold ${gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "text-4xl" : "text-7xl"}`}>
-                  {gameState?.team_1_score || 0}
-                </div>
-              </div>
-            </div>
-
-            {/* Center Logo */}
-            <div className="flex-shrink-0 text-center">
-              <div className={`bg-gold text-foreground rounded-full shadow-2xl animate-glow inline-block ${
-                gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "p-2" : "p-5"
-              }`}>
-                <DollarSign className={gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "w-8 h-8" : "w-14 h-14"} />
-              </div>
-              <h1 className={`font-extrabold text-shadow-lg whitespace-nowrap ${
-                gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "text-xl mt-1" : "text-3xl mt-3"
-              }`}>
-                THE PRICE IS RIGHT
-              </h1>
-              {!(gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed") && (
-                <p className="text-sm font-semibold text-gold mt-1">
-                  190 Access Edition
-                </p>
-              )}
-            </div>
-
-            {/* Team 2 Score */}
-            <div className="flex-1 max-w-md">
-              <div className={`bg-team2 rounded-2xl shadow-2xl transform transition-all duration-300 ${
-                gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "p-3" : "p-6"
-              } ${showWinnerAnimation && winner === "team2" ? "animate-winner-pulse ring-4 ring-gold" : ""}`}>
-                <div className={`flex items-center justify-end gap-3 ${gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "mb-1" : "mb-2"}`}>
-                  <span className={`font-bold truncate ${gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "text-lg" : "text-2xl"}`}>
-                    {gameState?.team_2_name?.toUpperCase() || "TEAM 2"}
-                  </span>
-                  <Users className={gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "w-5 h-5" : "w-8 h-8"} />
-                </div>
-                <div className={`font-extrabold text-right ${gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" ? "text-4xl" : "text-7xl"}`}>
-                  {gameState?.team_2_score || 0}
-                </div>
+              );
+            })}
+            <div className="flex-shrink-0 text-center px-1">
+              <div className="bg-gold text-foreground rounded-full shadow-xl animate-glow inline-block p-1.5">
+                <DollarSign className="w-5 h-5" />
               </div>
             </div>
           </div>
         </header>
 
-        {/* Main Content Area - Optimized for 16:9 */}
+        {/* Main Content Area */}
         <main className="flex-1 flex items-center justify-center px-8 pb-8 overflow-hidden">
           {gameState?.game_stage === "waiting" && (
             <div className="text-center animate-scale-in">
@@ -254,12 +248,12 @@ export default function TVDisplay() {
           )}
 
           {(gameState?.game_stage === "guessing" || gameState?.game_stage === "revealed") && gameState?.product && (
-            <div className="w-full max-w-[1600px] h-full flex flex-col justify-center">
-              <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 shadow-2xl">
+            <div className="w-full max-w-[1400px] flex flex-col justify-center">
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 shadow-2xl">
                 {/* Product Image - Only show during guessing */}
                 {gameState.game_stage === "guessing" && (
-                  <div className="relative mb-6">
-                    <div className="h-[400px] bg-white rounded-2xl overflow-hidden shadow-xl flex items-center justify-center">
+                  <div className="relative mb-3">
+                    <div className="h-[280px] bg-white rounded-xl overflow-hidden shadow-lg flex items-center justify-center">
                       <img
                         src={gameState.product.image_url}
                         alt={gameState.product.name}
@@ -270,27 +264,35 @@ export default function TVDisplay() {
                 )}
 
                 {/* Product Name */}
-                <h2 className="text-5xl font-extrabold text-center mb-6 text-shadow-lg line-clamp-2">
+                <h2 className="text-3xl font-extrabold text-center mb-4 text-shadow-lg line-clamp-2">
                   {gameState.product.name}
                 </h2>
 
                 {/* Guesses Display */}
                 {gameState.game_stage === "guessing" && gameState.team_1_guess !== null && (
-                  <div className="grid grid-cols-2 gap-8">
-                    <div className="bg-team1 rounded-2xl p-6 text-center">
-                      <p className="text-xl font-semibold mb-2 truncate">
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-team1 rounded-xl p-3 text-center">
+                      <p className="text-sm font-semibold mb-1 truncate">
                         {gameState.team_1_name || "Team 1"} Guess
                       </p>
-                      <p className="text-5xl font-extrabold">
+                      <p className="text-2xl font-extrabold">
                         {formatPrice(gameState.team_1_guess)}
                       </p>
                     </div>
-                    <div className="bg-team2 rounded-2xl p-6 text-center">
-                      <p className="text-xl font-semibold mb-2 truncate">
+                    <div className="bg-team2 rounded-xl p-3 text-center">
+                      <p className="text-sm font-semibold mb-1 truncate">
                         {gameState.team_2_name || "Team 2"} Guess
                       </p>
-                      <p className="text-5xl font-extrabold">
+                      <p className="text-2xl font-extrabold">
                         {formatPrice(gameState.team_2_guess || 0)}
+                      </p>
+                    </div>
+                    <div className="bg-team3 rounded-xl p-3 text-center">
+                      <p className="text-sm font-semibold mb-1 truncate">
+                        {gameState.team_3_name || "Team 3"} Guess
+                      </p>
+                      <p className="text-2xl font-extrabold">
+                        {formatPrice(gameState.team_3_guess || 0)}
                       </p>
                     </div>
                   </div>
@@ -298,56 +300,47 @@ export default function TVDisplay() {
 
                 {/* Revealed State */}
                 {gameState.game_stage === "revealed" && (
-                  <div className="space-y-6 animate-scale-in">
+                  <div className="space-y-4 animate-scale-in">
                     {/* Actual Price */}
-                    <div className="bg-gold text-foreground rounded-2xl p-8 text-center shadow-2xl animate-glow">
-                      <p className="text-2xl font-semibold mb-2">THE ACTUAL PRICE IS</p>
-                      <p className="text-7xl font-extrabold">
+                    <div className="bg-gold text-foreground rounded-xl p-4 text-center shadow-xl animate-glow">
+                      <p className="text-lg font-semibold mb-1">THE ACTUAL PRICE IS</p>
+                      <p className="text-5xl font-extrabold">
                         {formatPrice(gameState.product.actual_price)}
                       </p>
                     </div>
 
                     {/* Guesses Comparison */}
-                    <div className="grid grid-cols-2 gap-8">
-                      <div className={`rounded-2xl p-6 text-center transition-all ${
-                        winner === "team1" ? "bg-winner ring-4 ring-gold" : "bg-team1/50"
-                      }`}>
-                        <p className="text-xl font-semibold mb-2 truncate">
-                          {gameState.team_1_name || "Team 1"}
-                        </p>
-                        <p className="text-4xl font-extrabold">
-                          {formatPrice(gameState.team_1_guess || 0)}
-                        </p>
-                        {winner === "team1" && (
-                          <div className="flex items-center justify-center gap-2 mt-4">
-                            <Trophy className="w-8 h-8 text-gold" />
-                            <span className="text-2xl font-bold">WINNER!</span>
+                    <div className="grid grid-cols-3 gap-3">
+                      {(["team1", "team2", "team3"] as TeamId[]).map((team) => {
+                        const teamNum = team.replace("team", "") as "1" | "2" | "3";
+                        const name = gameState[`team_${teamNum}_name` as keyof GameStateWithProduct] as string || `Team ${teamNum}`;
+                        const guess = gameState[`team_${teamNum}_guess` as keyof GameStateWithProduct] as number | null;
+                        return (
+                          <div key={team} className={`rounded-xl p-3 text-center transition-all ${
+                            winner === team ? "bg-winner ring-4 ring-gold" : teamFadedClass(team)
+                          }`}>
+                            <p className="text-base font-semibold mb-1 truncate">
+                              {name}
+                            </p>
+                            <p className="text-2xl font-extrabold">
+                              {formatPrice(guess || 0)}
+                            </p>
+                            {winner === team && (
+                              <div className="flex items-center justify-center gap-1 mt-1">
+                                <Trophy className="w-5 h-5 text-gold" />
+                                <span className="text-lg font-bold">WINNER!</span>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                      <div className={`rounded-2xl p-6 text-center transition-all ${
-                        winner === "team2" ? "bg-winner ring-4 ring-gold" : "bg-team2/50"
-                      }`}>
-                        <p className="text-xl font-semibold mb-2 truncate">
-                          {gameState.team_2_name || "Team 2"}
-                        </p>
-                        <p className="text-4xl font-extrabold">
-                          {formatPrice(gameState.team_2_guess || 0)}
-                        </p>
-                        {winner === "team2" && (
-                          <div className="flex items-center justify-center gap-2 mt-4">
-                            <Trophy className="w-8 h-8 text-gold" />
-                            <span className="text-2xl font-bold">WINNER!</span>
-                          </div>
-                        )}
-                      </div>
+                        );
+                      })}
                     </div>
 
-                    {/* Both Over Message */}
+                    {/* All Over Message */}
                     {winner === "none" && (
-                      <div className="bg-destructive/80 rounded-2xl p-6 text-center animate-slide-up">
-                        <p className="text-2xl font-bold">
-                          Both teams went over! No points awarded.
+                      <div className="bg-destructive/80 rounded-xl p-3 text-center animate-slide-up">
+                        <p className="text-lg font-bold">
+                          All teams went over! No points awarded.
                         </p>
                       </div>
                     )}
@@ -358,84 +351,71 @@ export default function TVDisplay() {
           )}
 
           {/* Showcase Round Display */}
-          {(gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed") && showcase1 && showcase2 && (
-            <div className="w-full max-w-[1800px] h-full flex flex-col justify-center">
-              <div className="mb-3 text-center">
-                <h2 className="text-3xl font-extrabold text-gold text-shadow-lg mb-1">
-                  SHOWCASE SHOWDOWN
-                </h2>
-                <p className="text-lg opacity-90">5 Bonus Points!</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-6">
+          {(gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed") && showcase1 && showcase2 && showcase3 && (
+            <div className="w-full max-w-[1800px] flex flex-col justify-center">
+              <div className="grid grid-cols-3 gap-3">
                 {/* Team 1 Showcase */}
-                <div className={`bg-team1 rounded-3xl p-4 shadow-2xl ${
+                <div className={`bg-team1 rounded-xl p-3 shadow-xl ${
                   gameState.game_stage === "showcase_revealed" && winner === "team1" ? "ring-4 ring-gold animate-winner-pulse" : ""
                 }`}>
-                  <h3 className="text-2xl font-extrabold mb-3 text-center">
+                  <h3 className="text-base font-extrabold mb-1 text-center">
                     {gameState.team_1_name || "Team 1"}'s Showcase
                   </h3>
                   
-                  {/* Large Showcase Image */}
-                  <div className="mb-3">
-                    <div className="h-[280px] bg-white rounded-2xl overflow-hidden shadow-xl flex items-center justify-center">
+                  <div className="mb-2">
+                    <div className="h-[140px] bg-white rounded-lg overflow-hidden shadow-lg flex items-center justify-center">
                       {showcase1.items[0]?.image_url ? (
                         <img 
-                          src={showcase1.items[0].image_url} 
-                          alt="Showcase 1" 
-                          className="w-full h-full object-cover"
+                          src={showcase1.items[slideIndex]?.image_url || showcase1.items[0]?.image_url} 
+                          alt={`Showcase 1 - ${showcase1.items[slideIndex]?.item_name || ''}`}
+                          className="w-full h-full object-cover transition-opacity duration-700"
                         />
                       ) : (
-                        <div className="text-muted-foreground text-center p-6">
-                          <p className="text-xl font-semibold">Showcase Image</p>
-                          <p className="text-sm">Pending Upload</p>
+                        <div className="text-muted-foreground text-center p-2">
+                          <p className="text-sm font-semibold">Showcase Image</p>
+                          <p className="text-xs">Pending Upload</p>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Showcase Items List */}
-                  <div className="space-y-2 mb-3">
+                  <div className="space-y-1 mb-2">
                     {showcase1.items.map((item, idx) => (
-                      <div key={idx} className="bg-white/10 rounded-xl p-3">
-                        <div className="flex items-start justify-between gap-4">
+                      <div key={idx} className="bg-white/10 rounded-lg p-1.5">
+                        <div className="flex items-start justify-between gap-1">
                           <div className="flex-1">
-                            <p className="text-lg font-bold mb-0.5">{item.item_name}</p>
+                            <p className="text-sm font-bold">{item.item_name}</p>
                             <p className="text-xs opacity-90 line-clamp-1">{item.description}</p>
                           </div>
                           {gameState.game_stage === "showcase_revealed" && (
-                            <div className="text-right">
-                              <p className="text-xl font-mono font-extrabold">
-                                {formatPrice(item.price_cad)}
-                              </p>
-                            </div>
+                            <p className="text-sm font-mono font-extrabold">
+                              {formatPrice(item.price_cad)}
+                            </p>
                           )}
                         </div>
                       </div>
                     ))}
                   </div>
 
-                  {/* Guess Display */}
                   {gameState.team_1_showcase_guess !== null && (
-                    <div className="bg-white/20 rounded-2xl p-3 text-center mb-3">
-                      <p className="text-sm font-semibold mb-1">Team Guess</p>
-                      <p className="text-2xl font-extrabold font-mono">
+                    <div className="bg-white/20 rounded-lg p-1.5 text-center mb-2">
+                      <p className="text-xs font-semibold">Team Guess</p>
+                      <p className="text-lg font-extrabold font-mono">
                         {formatPrice(gameState.team_1_showcase_guess)}
                       </p>
                     </div>
                   )}
 
-                  {/* Actual Price */}
                   {gameState.game_stage === "showcase_revealed" && (
-                    <div className="bg-gold text-foreground rounded-2xl p-4 text-center">
-                      <p className="text-lg font-semibold mb-1">ACTUAL PRICE</p>
-                      <p className="text-4xl font-extrabold font-mono">
+                    <div className="bg-gold text-foreground rounded-lg p-2 text-center">
+                      <p className="text-sm font-semibold">ACTUAL PRICE</p>
+                      <p className="text-2xl font-extrabold font-mono">
                         {formatPrice(showcase1.total_price)}
                       </p>
                       {winner === "team1" && (
-                        <div className="flex items-center justify-center gap-2 mt-3">
-                          <Trophy className="w-6 h-6" />
-                          <span className="text-xl font-bold">+5 POINTS!</span>
+                        <div className="flex items-center justify-center gap-1 mt-1">
+                          <Trophy className="w-4 h-4" />
+                          <span className="text-sm font-bold">+5 POINTS!</span>
                         </div>
                       )}
                     </div>
@@ -443,73 +423,135 @@ export default function TVDisplay() {
                 </div>
 
                 {/* Team 2 Showcase */}
-                <div className={`bg-team2 rounded-3xl p-4 shadow-2xl ${
+                <div className={`bg-team2 rounded-xl p-3 shadow-xl ${
                   gameState.game_stage === "showcase_revealed" && winner === "team2" ? "ring-4 ring-gold animate-winner-pulse" : ""
                 }`}>
-                  <h3 className="text-2xl font-extrabold mb-3 text-center">
+                  <h3 className="text-base font-extrabold mb-1 text-center">
                     {gameState.team_2_name || "Team 2"}'s Showcase
                   </h3>
                   
-                  {/* Large Showcase Image */}
-                  <div className="mb-3">
-                    <div className="h-[280px] bg-white rounded-2xl overflow-hidden shadow-xl flex items-center justify-center">
+                  <div className="mb-2">
+                    <div className="h-[140px] bg-white rounded-lg overflow-hidden shadow-lg flex items-center justify-center">
                       {showcase2.items[0]?.image_url ? (
                         <img 
-                          src={showcase2.items[0].image_url} 
-                          alt="Showcase 2" 
-                          className="w-full h-full object-cover"
+                          src={showcase2.items[slideIndex]?.image_url || showcase2.items[0]?.image_url} 
+                          alt={`Showcase 2 - ${showcase2.items[slideIndex]?.item_name || ''}`}
+                          className="w-full h-full object-cover transition-opacity duration-700"
                         />
                       ) : (
-                        <div className="text-muted-foreground text-center p-6">
-                          <p className="text-xl font-semibold">Showcase Image</p>
-                          <p className="text-sm">Pending Upload</p>
+                        <div className="text-muted-foreground text-center p-2">
+                          <p className="text-sm font-semibold">Showcase Image</p>
+                          <p className="text-xs">Pending Upload</p>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Showcase Items List */}
-                  <div className="space-y-2 mb-3">
+                  <div className="space-y-1 mb-2">
                     {showcase2.items.map((item, idx) => (
-                      <div key={idx} className="bg-white/10 rounded-xl p-3">
-                        <div className="flex items-start justify-between gap-4">
+                      <div key={idx} className="bg-white/10 rounded-lg p-1.5">
+                        <div className="flex items-start justify-between gap-1">
                           <div className="flex-1">
-                            <p className="text-lg font-bold mb-0.5">{item.item_name}</p>
+                            <p className="text-sm font-bold">{item.item_name}</p>
                             <p className="text-xs opacity-90 line-clamp-1">{item.description}</p>
                           </div>
                           {gameState.game_stage === "showcase_revealed" && (
-                            <div className="text-right">
-                              <p className="text-xl font-mono font-extrabold">
-                                {formatPrice(item.price_cad)}
-                              </p>
-                            </div>
+                            <p className="text-sm font-mono font-extrabold">
+                              {formatPrice(item.price_cad)}
+                            </p>
                           )}
                         </div>
                       </div>
                     ))}
                   </div>
 
-                  {/* Guess Display */}
                   {gameState.team_2_showcase_guess !== null && (
-                    <div className="bg-white/20 rounded-2xl p-3 text-center mb-3">
-                      <p className="text-sm font-semibold mb-1">Team Guess</p>
-                      <p className="text-2xl font-extrabold font-mono">
+                    <div className="bg-white/20 rounded-lg p-1.5 text-center mb-2">
+                      <p className="text-xs font-semibold">Team Guess</p>
+                      <p className="text-lg font-extrabold font-mono">
                         {formatPrice(gameState.team_2_showcase_guess)}
                       </p>
                     </div>
                   )}
 
-                  {/* Actual Price */}
                   {gameState.game_stage === "showcase_revealed" && (
-                    <div className="bg-gold text-foreground rounded-2xl p-4 text-center">
-                      <p className="text-lg font-semibold mb-1">ACTUAL PRICE</p>
-                      <p className="text-4xl font-extrabold font-mono">
+                    <div className="bg-gold text-foreground rounded-lg p-2 text-center">
+                      <p className="text-sm font-semibold">ACTUAL PRICE</p>
+                      <p className="text-2xl font-extrabold font-mono">
                         {formatPrice(showcase2.total_price)}
                       </p>
                       {winner === "team2" && (
-                        <div className="flex items-center justify-center gap-2 mt-3">
-                          <Trophy className="w-6 h-6" />
-                          <span className="text-xl font-bold">+5 POINTS!</span>
+                        <div className="flex items-center justify-center gap-1 mt-1">
+                          <Trophy className="w-4 h-4" />
+                          <span className="text-sm font-bold">+5 POINTS!</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Team 3 Showcase */}
+                <div className={`bg-team3 rounded-xl p-3 shadow-xl ${
+                  gameState.game_stage === "showcase_revealed" && winner === "team3" ? "ring-4 ring-gold animate-winner-pulse" : ""
+                }`}>
+                  <h3 className="text-base font-extrabold mb-1 text-center">
+                    {gameState.team_3_name || "Team 3"}'s Showcase
+                  </h3>
+                  
+                  <div className="mb-2">
+                    <div className="h-[140px] bg-white rounded-lg overflow-hidden shadow-lg flex items-center justify-center">
+                      {showcase3.items[0]?.image_url ? (
+                        <img 
+                          src={showcase3.items[slideIndex]?.image_url || showcase3.items[0]?.image_url} 
+                          alt={`Showcase 3 - ${showcase3.items[slideIndex]?.item_name || ''}`}
+                          className="w-full h-full object-cover transition-opacity duration-700"
+                        />
+                      ) : (
+                        <div className="text-muted-foreground text-center p-2">
+                          <p className="text-sm font-semibold">Showcase Image</p>
+                          <p className="text-xs">Pending Upload</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1 mb-2">
+                    {showcase3.items.map((item, idx) => (
+                      <div key={idx} className="bg-white/10 rounded-lg p-1.5">
+                        <div className="flex items-start justify-between gap-1">
+                          <div className="flex-1">
+                            <p className="text-sm font-bold">{item.item_name}</p>
+                            <p className="text-xs opacity-90 line-clamp-1">{item.description}</p>
+                          </div>
+                          {gameState.game_stage === "showcase_revealed" && (
+                            <p className="text-sm font-mono font-extrabold">
+                              {formatPrice(item.price_cad)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {gameState.team_3_showcase_guess !== null && (
+                    <div className="bg-white/20 rounded-lg p-1.5 text-center mb-2">
+                      <p className="text-xs font-semibold">Team Guess</p>
+                      <p className="text-lg font-extrabold font-mono">
+                        {formatPrice(gameState.team_3_showcase_guess)}
+                      </p>
+                    </div>
+                  )}
+
+                  {gameState.game_stage === "showcase_revealed" && (
+                    <div className="bg-gold text-foreground rounded-lg p-2 text-center">
+                      <p className="text-sm font-semibold">ACTUAL PRICE</p>
+                      <p className="text-2xl font-extrabold font-mono">
+                        {formatPrice(showcase3.total_price)}
+                      </p>
+                      {winner === "team3" && (
+                        <div className="flex items-center justify-center gap-1 mt-1">
+                          <Trophy className="w-4 h-4" />
+                          <span className="text-sm font-bold">+5 POINTS!</span>
                         </div>
                       )}
                     </div>
@@ -517,11 +559,11 @@ export default function TVDisplay() {
                 </div>
               </div>
 
-              {/* Both Teams Over Message */}
+              {/* All Teams Over Message */}
               {gameState.game_stage === "showcase_revealed" && winner === "none" && (
-                <div className="mt-4 bg-destructive/80 rounded-2xl p-4 text-center animate-slide-up">
-                  <p className="text-2xl font-bold">
-                    Both teams went over! No bonus points awarded.
+                <div className="mt-2 bg-destructive/80 rounded-lg p-3 text-center animate-slide-up">
+                  <p className="text-lg font-bold">
+                    All teams went over! No bonus points awarded.
                   </p>
                 </div>
               )}

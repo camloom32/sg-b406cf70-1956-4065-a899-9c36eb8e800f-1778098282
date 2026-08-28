@@ -49,6 +49,7 @@ const config: Config = {
         ring: "hsl(var(--ring))",
         team1: "hsl(var(--team-1))",
         team2: "hsl(var(--team-2))",
+        team3: "hsl(var(--team-3))",
         winner: "hsl(var(--winner))",
         gold: "hsl(var(--gold))",
         chart: {

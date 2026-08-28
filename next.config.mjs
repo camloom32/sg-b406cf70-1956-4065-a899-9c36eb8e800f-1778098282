@@ -42,7 +42,7 @@ const nextConfig = {
       },
     ],
   },
-  allowedDevOrigins: ["*.daytona.work", "*.softgen.dev"],
+  allowedDevOrigins: ["*.daytona.work", "*.softgen.dev", "100.88.159.126"],
 };
 
 export default nextConfig;

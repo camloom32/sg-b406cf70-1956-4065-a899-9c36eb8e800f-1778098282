@@ -8,6 +8,10 @@ export interface GameStateWithProduct extends GameState {
   product?: Product | null;
 }
 
+export type TeamId = "team1" | "team2" | "team3";
+
+const TEAM_KEYS = ["team_1", "team_2", "team_3"] as const;
+
 // Fetch the current game state
 export async function getGameState(): Promise<GameStateWithProduct | null> {
   const { data, error } = await supabase
@@ -80,6 +84,7 @@ export async function startNewRound(): Promise<boolean> {
       current_product_id: product.id,
       team_1_guess: null,
       team_2_guess: null,
+      team_3_guess: null,
       game_stage: "guessing",
     })
     .not("id", "is", null);
@@ -93,12 +98,13 @@ export async function startNewRound(): Promise<boolean> {
 }
 
 // Submit team guesses
-export async function submitGuesses(team1Guess: number, team2Guess: number): Promise<boolean> {
+export async function submitGuesses(team1Guess: number, team2Guess: number, team3Guess: number): Promise<boolean> {
   const { error } = await supabase
     .from("game_state")
     .update({
       team_1_guess: team1Guess,
       team_2_guess: team2Guess,
+      team_3_guess: team3Guess,
     })
     .not("id", "is", null);
 
@@ -111,7 +117,7 @@ export async function submitGuesses(team1Guess: number, team2Guess: number): Pro
 }
 
 // Calculate winner and reveal results
-export async function revealResults(): Promise<{ winner: "team1" | "team2" | "none" | null }> {
+export async function revealResults(): Promise<{ winner: TeamId | "none" | null }> {
   const gameState = await getGameState();
   
   if (!gameState || !gameState.product) {
@@ -121,48 +127,66 @@ export async function revealResults(): Promise<{ winner: "team1" | "team2" | "no
   const actualPrice = gameState.product.actual_price;
   const team1Guess = gameState.team_1_guess;
   const team2Guess = gameState.team_2_guess;
+  const team3Guess = gameState.team_3_guess;
 
-  if (team1Guess === null || team2Guess === null) {
+  if (team1Guess === null || team2Guess === null || team3Guess === null) {
     return { winner: null };
   }
 
-  // Calculate differences (negative if over)
-  const team1Diff = actualPrice - team1Guess;
-  const team2Diff = actualPrice - team2Guess;
+  const guesses: Record<TeamId, number> = {
+    team1: team1Guess,
+    team2: team2Guess,
+    team3: team3Guess,
+  };
 
-  let winner: "team1" | "team2" | "none";
-  let newTeam1Score = gameState.team_1_score;
-  let newTeam2Score = gameState.team_2_score;
+  const diffs: Record<TeamId, number> = {
+    team1: actualPrice - team1Guess,
+    team2: actualPrice - team2Guess,
+    team3: actualPrice - team3Guess,
+  };
 
-  // Both went over - no points
-  if (team1Diff < 0 && team2Diff < 0) {
+  const scores: Record<TeamId, number> = {
+    team1: gameState.team_1_score ?? 0,
+    team2: gameState.team_2_score ?? 0,
+    team3: gameState.team_3_score ?? 0,
+  };
+
+  // Check which teams went over
+  const teamsOver = (Object.keys(diffs) as TeamId[]).filter(t => diffs[t] < 0);
+  const teamsUnder = (Object.keys(diffs) as TeamId[]).filter(t => diffs[t] >= 0);
+
+  let winner: TeamId | "none";
+
+  if (teamsUnder.length === 0) {
+    // All teams went over
     winner = "none";
-  }
-  // Team 1 went over, Team 2 didn't
-  else if (team1Diff < 0) {
-    winner = "team2";
-    newTeam2Score += 1;
-  }
-  // Team 2 went over, Team 1 didn't
-  else if (team2Diff < 0) {
-    winner = "team1";
-    newTeam1Score += 1;
-  }
-  // Neither went over - closest wins
-  else if (team1Diff <= team2Diff) {
-    winner = "team1";
-    newTeam1Score += 1;
+  } else if (teamsUnder.length === 1) {
+    // Only one team under
+    winner = teamsUnder[0];
+    scores[winner] += 1;
   } else {
-    winner = "team2";
-    newTeam2Score += 1;
+    // Multiple teams under: closest wins
+    let closestTeam = teamsUnder[0];
+    let closestDiff = diffs[teamsUnder[0]];
+    for (let i = 1; i < teamsUnder.length; i++) {
+      if (diffs[teamsUnder[i]] < closestDiff) {
+        closestTeam = teamsUnder[i];
+        closestDiff = diffs[teamsUnder[i]];
+      } else if (diffs[teamsUnder[i]] === closestDiff) {
+        // Tie: earlier team wins
+      }
+    }
+    winner = closestTeam;
+    scores[winner] += 1;
   }
 
   // Update game state with new scores and revealed stage
   const { error } = await supabase
     .from("game_state")
     .update({
-      team_1_score: newTeam1Score,
-      team_2_score: newTeam2Score,
+      team_1_score: scores.team1,
+      team_2_score: scores.team2,
+      team_3_score: scores.team3,
       game_stage: "revealed",
     })
     .not("id", "is", null);
@@ -182,9 +206,11 @@ export async function resetScores(): Promise<boolean> {
     .update({
       team_1_score: 0,
       team_2_score: 0,
+      team_3_score: 0,
       current_product_id: null,
       team_1_guess: null,
       team_2_guess: null,
+      team_3_guess: null,
       game_stage: "waiting",
     })
     .not("id", "is", null);
@@ -299,12 +325,13 @@ export async function getRemainingProductsCount(): Promise<number> {
 }
 
 // Update team names
-export async function updateTeamNames(team1Name: string, team2Name: string): Promise<boolean> {
+export async function updateTeamNames(team1Name: string, team2Name: string, team3Name: string): Promise<boolean> {
   const { error } = await supabase
     .from("game_state")
     .update({
       team_1_name: team1Name || "Team 1",
       team_2_name: team2Name || "Team 2",
+      team_3_name: team3Name || "Team 3",
     })
     .not("id", "is", null);
 
@@ -342,6 +369,7 @@ export async function skipCurrentProduct(): Promise<boolean> {
       current_product_id: null,
       team_1_guess: null,
       team_2_guess: null,
+      team_3_guess: null,
       game_stage: "waiting",
     })
     .not("id", "is", null);
@@ -364,8 +392,12 @@ export interface ShowcasePackage {
   total_price: number;
 }
 
-// Get showcase packages (1 and 2)
-export async function getShowcasePackages(): Promise<{ showcase1: ShowcasePackage | null; showcase2: ShowcasePackage | null }> {
+// Get showcase packages (prefers 7, 8, 9 when available)
+export async function getShowcasePackages(): Promise<{
+  showcase1: ShowcasePackage | null;
+  showcase2: ShowcasePackage | null;
+  showcase3: ShowcasePackage | null;
+}> {
   const { data, error } = await supabase
     .from("showcases")
     .select("*")
@@ -373,10 +405,10 @@ export async function getShowcasePackages(): Promise<{ showcase1: ShowcasePackag
 
   if (error) {
     console.error("Error fetching showcases:", error);
-    return { showcase1: null, showcase2: null };
+    return { showcase1: null, showcase2: null, showcase3: null };
   }
 
-  // Group by showcase_id and get the first two available showcases
+  // Group by showcase_id
   const showcaseGroups = data.reduce((acc, item) => {
     if (!acc[item.showcase_id]) {
       acc[item.showcase_id] = [];
@@ -386,27 +418,26 @@ export async function getShowcasePackages(): Promise<{ showcase1: ShowcasePackag
   }, {} as Record<number, ShowcaseItem[]>);
 
   const availableShowcaseIds = Object.keys(showcaseGroups).map(Number).sort((a, b) => a - b);
+  const preferredShowcaseIds = [7, 8, 9].filter((id) => showcaseGroups[id]?.length);
+  const selectedShowcaseIds = preferredShowcaseIds.length === 3
+    ? preferredShowcaseIds
+    : availableShowcaseIds.slice(0, 3);
 
-  // Get first two showcases (regardless of their actual IDs)
-  const showcase1Id = availableShowcaseIds[0];
-  const showcase2Id = availableShowcaseIds[1];
+  const getPackage = (index: number): ShowcasePackage | null => {
+    const id = selectedShowcaseIds[index];
+    const items = id ? showcaseGroups[id] : [];
+    return items.length > 0 ? {
+      showcase_id: id,
+      items,
+      total_price: items.reduce((sum, item) => sum + item.price_cad, 0)
+    } : null;
+  };
 
-  const showcase1Items = showcase1Id ? showcaseGroups[showcase1Id] : [];
-  const showcase2Items = showcase2Id ? showcaseGroups[showcase2Id] : [];
-
-  const showcase1: ShowcasePackage | null = showcase1Items.length > 0 ? {
-    showcase_id: showcase1Id,
-    items: showcase1Items,
-    total_price: showcase1Items.reduce((sum, item) => sum + item.price_cad, 0)
-  } : null;
-
-  const showcase2: ShowcasePackage | null = showcase2Items.length > 0 ? {
-    showcase_id: showcase2Id,
-    items: showcase2Items,
-    total_price: showcase2Items.reduce((sum, item) => sum + item.price_cad, 0)
-  } : null;
-
-  return { showcase1, showcase2 };
+  return {
+    showcase1: getPackage(0),
+    showcase2: getPackage(1),
+    showcase3: getPackage(2),
+  };
 }
 
 // Start showcase round
@@ -417,6 +448,7 @@ export async function startShowcaseRound(): Promise<boolean> {
       game_stage: "showcase",
       team_1_showcase_guess: null,
       team_2_showcase_guess: null,
+      team_3_showcase_guess: null,
     })
     .not("id", "is", null);
 
@@ -429,12 +461,13 @@ export async function startShowcaseRound(): Promise<boolean> {
 }
 
 // Submit showcase guesses
-export async function submitShowcaseGuesses(team1Guess: number, team2Guess: number): Promise<boolean> {
+export async function submitShowcaseGuesses(team1Guess: number, team2Guess: number, team3Guess: number): Promise<boolean> {
   const { error } = await supabase
     .from("game_state")
     .update({
       team_1_showcase_guess: team1Guess,
       team_2_showcase_guess: team2Guess,
+      team_3_showcase_guess: team3Guess,
     })
     .not("id", "is", null);
 
@@ -447,58 +480,64 @@ export async function submitShowcaseGuesses(team1Guess: number, team2Guess: numb
 }
 
 // Reveal showcase results
-export async function revealShowcaseResults(): Promise<{ winner: "team1" | "team2" | "none" | null }> {
+export async function revealShowcaseResults(): Promise<{ winner: TeamId | "none" | null }> {
   const gameState = await getGameState();
-  const { showcase1, showcase2 } = await getShowcasePackages();
+  const { showcase1, showcase2, showcase3 } = await getShowcasePackages();
 
-  if (!gameState || !showcase1 || !showcase2) {
+  if (!gameState || !showcase1 || !showcase2 || !showcase3) {
     return { winner: null };
   }
 
   const team1Guess = gameState.team_1_showcase_guess;
   const team2Guess = gameState.team_2_showcase_guess;
+  const team3Guess = gameState.team_3_showcase_guess;
 
-  if (team1Guess === null || team2Guess === null) {
+  if (team1Guess === null || team2Guess === null || team3Guess === null) {
     return { winner: null };
   }
 
-  // Team 1 gets showcase 1, Team 2 gets showcase 2
-  const team1Diff = showcase1.total_price - team1Guess;
-  const team2Diff = showcase2.total_price - team2Guess;
+  // Team 1 gets showcase 1, Team 2 gets showcase 2, Team 3 gets showcase 3
+  const showcasePrices = [showcase1.total_price, showcase2.total_price, showcase3.total_price];
+  const guesses = [team1Guess, team2Guess, team3Guess];
+  const teams: TeamId[] = ["team1", "team2", "team3"];
 
-  let winner: "team1" | "team2" | "none";
-  let newTeam1Score = gameState.team_1_score;
-  let newTeam2Score = gameState.team_2_score;
+  const diffs = guesses.map((g, i) => showcasePrices[i] - g);
+  const scores: Record<TeamId, number> = {
+    team1: gameState.team_1_score ?? 0,
+    team2: gameState.team_2_score ?? 0,
+    team3: gameState.team_3_score ?? 0,
+  };
 
-  // Both went over - no points
-  if (team1Diff < 0 && team2Diff < 0) {
+  const teamsUnder = teams.filter((_, i) => diffs[i] >= 0);
+
+  let winner: TeamId | "none";
+
+  if (teamsUnder.length === 0) {
     winner = "none";
-  }
-  // Team 1 went over, Team 2 didn't
-  else if (team1Diff < 0) {
-    winner = "team2";
-    newTeam2Score += 5;
-  }
-  // Team 2 went over, Team 1 didn't
-  else if (team2Diff < 0) {
-    winner = "team1";
-    newTeam1Score += 5;
-  }
-  // Neither went over - closest wins
-  else if (team1Diff <= team2Diff) {
-    winner = "team1";
-    newTeam1Score += 5;
+  } else if (teamsUnder.length === 1) {
+    winner = teamsUnder[0];
+    scores[winner] += 5;
   } else {
-    winner = "team2";
-    newTeam2Score += 5;
+    let closestIdx = teamsUnder[0];
+    let closestDiff = diffs[teams.indexOf(teamsUnder[0])];
+    for (let i = 1; i < teamsUnder.length; i++) {
+      const idx = teams.indexOf(teamsUnder[i]);
+      if (diffs[idx] < closestDiff) {
+        closestIdx = teamsUnder[i];
+        closestDiff = diffs[idx];
+      }
+    }
+    winner = closestIdx;
+    scores[winner] += 5;
   }
 
   // Update game state with new scores and revealed stage
   const { error } = await supabase
     .from("game_state")
     .update({
-      team_1_score: newTeam1Score,
-      team_2_score: newTeam2Score,
+      team_1_score: scores.team1,
+      team_2_score: scores.team2,
+      team_3_score: scores.team3,
       game_stage: "showcase_revealed",
     })
     .not("id", "is", null);
