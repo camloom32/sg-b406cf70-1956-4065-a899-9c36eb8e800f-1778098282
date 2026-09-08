@@ -19,6 +19,12 @@ import {
   submitShowcaseGuesses,
   revealShowcaseResults,
   skipCurrentProduct,
+  startOneAwayRound,
+  setOneAwayGuesses,
+  revealOneAway,
+  nextOneAwayTurn,
+  endOneAwayRound,
+  parseOneAwayState,
   type GameStateWithProduct 
 } from "@/services/gameService";
 import { 
@@ -32,7 +38,8 @@ import {
   AlertCircle,
   CheckCircle,
   Package,
-  SkipForward
+  SkipForward,
+  ArrowUpDown
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -49,6 +56,7 @@ export default function HostController() {
   const [team1ShowcaseGuess, setTeam1ShowcaseGuess] = useState("");
   const [team2ShowcaseGuess, setTeam2ShowcaseGuess] = useState("");
   const [team3ShowcaseGuess, setTeam3ShowcaseGuess] = useState("");
+  const [oaDirections, setOaDirections] = useState<(string | null)[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -252,6 +260,78 @@ export default function HostController() {
         description: "Could not skip the current product.",
       });
     }
+    setIsLoading(false);
+  };
+
+  // One Away derived state
+  const oneAway = parseOneAwayState(gameState?.one_away_state);
+  const oneAwayTurn = oneAway?.turn ?? 0;
+  const oaPrize = oneAway?.prizes[oneAwayTurn - 1] ?? null;
+  const oaTeamName = oneAwayTurn === 1
+    ? gameState?.team_1_name || "Team 1"
+    : oneAwayTurn === 2
+    ? gameState?.team_2_name || "Team 2"
+    : gameState?.team_3_name || "Team 3";
+  const oaLastResult = oneAway?.results[oneAway.results.length - 1] ?? null;
+
+  // Sync local digit calls when a new turn starts
+  useEffect(() => {
+    if (gameState?.game_stage === "one_away" && oneAway) {
+      setOaDirections(oneAway.guesses[oneAway.turn - 1] ?? []);
+    }
+  }, [gameState?.game_stage, oneAwayTurn]);
+
+  const handleStartOneAway = async () => {
+    setIsLoading(true);
+    const success = await startOneAwayRound();
+    if (success) {
+      toast({
+        title: "One Away Round Started!",
+        description: "Each team gets their own prize. All digits right wins 3 points.",
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not start One Away. Need at least 3 vehicle prizes.",
+      });
+    }
+    setIsLoading(false);
+  };
+
+  const handleOaToggle = (digitIndex: number, dir: "H" | "L") => {
+    const next = [...oaDirections];
+    next[digitIndex] = next[digitIndex] === dir ? null : dir;
+    setOaDirections(next);
+    setOneAwayGuesses(next);
+  };
+
+  const handleRevealOneAway = async () => {
+    setIsLoading(true);
+    const result = await revealOneAway();
+    if (!result) {
+      toast({
+        variant: "destructive",
+        title: "Missing Calls",
+        description: "Set higher or lower for every digit first.",
+      });
+    }
+    setIsLoading(false);
+  };
+
+  const handleNextOneAway = async () => {
+    setIsLoading(true);
+    await nextOneAwayTurn();
+    setIsLoading(false);
+  };
+
+  const handleEndOneAway = async () => {
+    setIsLoading(true);
+    await endOneAwayRound();
+    toast({
+      title: "One Away Complete",
+      description: "Back to the regular game.",
+    });
     setIsLoading(false);
   };
 
@@ -597,6 +677,123 @@ export default function HostController() {
             </CardContent>
           </Card>
 
+          {/* One Away Round */}
+          <Card className="border-2 border-primary/50 bg-primary/5">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <ArrowUpDown className="w-5 h-5 text-primary" />
+                One Away Round (3 Points!)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Start One Away Button */}
+              <Button 
+                onClick={handleStartOneAway} 
+                disabled={isLoading || 
+                  gameState?.game_stage === "guessing" || 
+                  gameState?.game_stage === "showcase" || 
+                  gameState?.game_stage === "showcase_revealed" ||
+                  gameState?.game_stage === "one_away" ||
+                  gameState?.game_stage === "one_away_reveal" ||
+                  gameState?.game_stage === "one_away_complete"}
+                className="w-full h-14 text-lg font-bold"
+                size="lg"
+              >
+                <ArrowUpDown className="w-6 h-6 mr-2" />
+                Start One Away Round
+              </Button>
+
+              {/* Current Turn: digit calls */}
+              {gameState?.game_stage === "one_away" && oaPrize && (
+                <div className="space-y-3 p-4 bg-muted rounded-lg">
+                  <p className={`text-sm font-bold ${
+                    oneAwayTurn === 1 ? "text-team1" : oneAwayTurn === 2 ? "text-team2" : "text-team3"
+                  }`}>
+                    {oaTeamName}'s Turn (Team {oneAwayTurn} of 3)
+                  </p>
+                  <p className="font-bold text-lg">{oaPrize.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Price shown: <span className="font-mono font-bold text-foreground">
+                      ${Number(oaPrize.fake_price).toLocaleString("en-US")}
+                    </span> (every digit is one away!)
+                  </p>
+                  <div className="space-y-2">
+                    {oaPrize.fake_price.split("").map((digit, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <span className="w-10 text-center text-lg font-mono font-extrabold bg-background rounded-md py-1 border">
+                          {digit}
+                        </span>
+                        <Button
+                          variant={oaDirections[i] === "H" ? "default" : "outline"}
+                          size="sm"
+                          className="flex-1 h-10"
+                          onClick={() => handleOaToggle(i, "H")}
+                        >
+                          ▲ Higher
+                        </Button>
+                        <Button
+                          variant={oaDirections[i] === "L" ? "default" : "outline"}
+                          size="sm"
+                          className="flex-1 h-10"
+                          onClick={() => handleOaToggle(i, "L")}
+                        >
+                          ▼ Lower
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <Button 
+                    onClick={handleRevealOneAway} 
+                    disabled={isLoading || !oaPrize.fake_price.split("").every((_, i) => oaDirections[i] === "H" || oaDirections[i] === "L")}
+                    className="w-full h-12 font-bold bg-gold hover:bg-gold/90 text-foreground"
+                  >
+                    <Eye className="w-5 h-5 mr-2" />
+                    REVEAL!
+                  </Button>
+                </div>
+              )}
+
+              {/* Turn Result */}
+              {gameState?.game_stage === "one_away_reveal" && oaLastResult && (
+                <div className="space-y-3 p-4 bg-muted rounded-lg text-center">
+                  <p className="text-lg font-bold">
+                    {oaLastResult.correct} of {oaLastResult.total} digits right
+                  </p>
+                  <p className={`text-2xl font-extrabold ${oaLastResult.points > 0 ? "text-primary" : "text-destructive"}`}>
+                    {oaLastResult.points > 0 ? "+3 POINTS!" : "No points"}
+                  </p>
+                  <Button 
+                    onClick={handleNextOneAway} 
+                    disabled={isLoading}
+                    className="w-full h-12 font-bold"
+                  >
+                    {oneAwayTurn >= 3 ? "Finish One Away" : "Next Team's Turn"}
+                  </Button>
+                </div>
+              )}
+
+              {/* Round Summary */}
+              {gameState?.game_stage === "one_away_complete" && oneAway && (
+                <div className="space-y-2 p-4 bg-muted rounded-lg">
+                  {oneAway.results.map((r) => (
+                    <p key={r.team} className="text-sm font-semibold text-center">
+                      {r.team === 1 ? gameState?.team_1_name || "Team 1" : r.team === 2 ? gameState?.team_2_name || "Team 2" : gameState?.team_3_name || "Team 3"}:{" "}
+                      {r.correct}/{r.total} right — {r.points > 0 ? "+3" : "0"} pts
+                    </p>
+                  ))}
+                  <Button 
+                    onClick={handleEndOneAway} 
+                    disabled={isLoading}
+                    variant="secondary"
+                    className="w-full h-12 font-bold"
+                  >
+                    End One Away Round
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Showcase Round */}
           <Card className="border-2 border-gold bg-gold/5">
             <CardHeader>
@@ -609,7 +806,7 @@ export default function HostController() {
               {/* Start Showcase Button */}
               <Button 
                 onClick={handleStartShowcase} 
-                disabled={isLoading || gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed"}
+                disabled={isLoading || gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" || gameState?.game_stage === "one_away" || gameState?.game_stage === "one_away_reveal" || gameState?.game_stage === "one_away_complete"}
                 className="w-full h-14 text-lg font-bold bg-gold hover:bg-gold/90 text-foreground"
                 size="lg"
               >

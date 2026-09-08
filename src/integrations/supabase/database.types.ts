@@ -20,6 +20,7 @@ export type Database = {
           current_product_id: string | null
           game_stage: string | null
           id: string
+          one_away_state: Json | null
           showcase_active: boolean | null
           team_1_guess: number | null
           team_1_name: string | null
@@ -42,6 +43,7 @@ export type Database = {
           current_product_id?: string | null
           game_stage?: string | null
           id?: string
+          one_away_state?: Json | null
           showcase_active?: boolean | null
           team_1_guess?: number | null
           team_1_name?: string | null
@@ -64,6 +66,7 @@ export type Database = {
           current_product_id?: string | null
           game_stage?: string | null
           id?: string
+          one_away_state?: Json | null
           showcase_active?: boolean | null
           team_1_guess?: number | null
           team_1_name?: string | null
@@ -91,6 +94,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      one_away_prizes: {
+        Row: {
+          actual_price: number
+          created_at: string | null
+          id: string
+          image_url: string | null
+          is_used: boolean | null
+          name: string
+        }
+        Insert: {
+          actual_price: number
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_used?: boolean | null
+          name: string
+        }
+        Update: {
+          actual_price?: number
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_used?: boolean | null
+          name?: string
+        }
+        Relationships: []
       }
       products: {
         Row: {
@@ -152,6 +182,7 @@ export type Database = {
           description: string | null
           id: string
           image_url: string | null
+          is_used: boolean | null
           item_name: string
           item_type: string
           price_cad: number
@@ -162,6 +193,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          is_used?: boolean | null
           item_name: string
           item_type: string
           price_cad: number
@@ -172,6 +204,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          is_used?: boolean | null
           item_name?: string
           item_type?: string
           price_cad?: number

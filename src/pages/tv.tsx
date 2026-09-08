@@ -4,6 +4,7 @@ import {
   getGameState, 
   subscribeToGameState,
   getShowcasePackages,
+  parseOneAwayState,
   type GameStateWithProduct,
   type ShowcasePackage,
   type TeamId 
@@ -126,6 +127,19 @@ export default function TVDisplay() {
         }
       }
 
+      if (newState.game_stage === "one_away_reveal" && gameState?.game_stage === "one_away") {
+        const oa = parseOneAwayState(newState.one_away_state);
+        const last = oa?.results[oa.results.length - 1];
+        if (last && last.points > 0) {
+          setWinner(`team${last.team}` as TeamId);
+          playThemeSong();
+          setShowWinnerAnimation(true);
+          setTimeout(() => setShowWinnerAnimation(false), 5000);
+        } else {
+          setWinner(null);
+        }
+      }
+
       setGameState(newState);
     });
 
@@ -161,6 +175,21 @@ export default function TVDisplay() {
   };
 
   const isShowcase = gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed";
+
+  // One Away derived state
+  const oneAway = parseOneAwayState(gameState?.one_away_state);
+  const oaTurn = oneAway?.turn ?? 0;
+  const oaPrize = oneAway?.prizes[oaTurn - 1] ?? null;
+  const oaGuess = oneAway?.guesses[oaTurn - 1] ?? [];
+  const oaLastResult = oneAway?.results[oneAway.results.length - 1] ?? null;
+  const oaTeamId = `team${oaTurn}` as TeamId;
+  const oaTeamName = oaTurn === 1
+    ? gameState?.team_1_name || "Team 1"
+    : oaTurn === 2
+    ? gameState?.team_2_name || "Team 2"
+    : gameState?.team_3_name || "Team 3";
+  const oaActualDigits = oaPrize ? String(Math.round(oaPrize.actual_price)).split("") : [];
+  const oaFakeDigits = oaPrize ? oaPrize.fake_price.split("") : [];
 
   useEffect(() => {
     if (!isShowcase) { setSlideIndex(0); return; }
@@ -346,6 +375,105 @@ export default function TVDisplay() {
                     )}
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* One Away Round Display */}
+          {(gameState?.game_stage === "one_away" || gameState?.game_stage === "one_away_reveal") && oneAway && oaPrize && (
+            <div className="w-full max-w-[1400px] flex flex-col justify-center animate-scale-in">
+              <h2 className="text-6xl font-extrabold text-center mb-4 text-shadow-lg">
+                ONE AWAY!
+              </h2>
+              <div className={`${teamColorClass(oaTeamId)} rounded-2xl p-6 shadow-2xl`}>
+                <p className="text-3xl font-extrabold text-center mb-1">
+                  {oaTeamName.toUpperCase()}
+                </p>
+                <p className="text-xl text-center mb-4 opacity-90">
+                  {oaPrize.name}
+                </p>
+
+                {oaPrize.image_url && (
+                  <div className="h-[260px] bg-white/90 rounded-xl overflow-hidden shadow-lg flex items-center justify-center mb-4">
+                    <img
+                      src={oaPrize.image_url}
+                      alt={oaPrize.name}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                )}
+
+                <p className="text-lg font-semibold text-center mb-3">
+                  {gameState.game_stage === "one_away" ? "EVERY DIGIT IS ONE AWAY..." : "THE ACTUAL RETAIL PRICE"}
+                </p>
+
+                {/* Digit cards */}
+                <div className="flex justify-center gap-3 mb-4 flex-wrap">
+                  {oaFakeDigits.map((digit, i) => {
+                    const revealed = gameState.game_stage === "one_away_reveal";
+                    const isCorrect = revealed && oaActualDigits[i]
+                      ? oaGuess[i] === (Number(oaActualDigits[i]) > Number(digit) ? "H" : "L")
+                      : false;
+                    return (
+                      <div key={i} className="flex flex-col items-center">
+                        <div className={`w-24 h-28 rounded-xl flex items-center justify-center text-6xl font-extrabold font-mono shadow-lg ${
+                          revealed
+                            ? isCorrect
+                              ? "bg-winner text-white"
+                              : "bg-destructive text-white"
+                            : "bg-white text-foreground"
+                        }`}>
+                          {revealed ? oaActualDigits[i] : digit}
+                        </div>
+                        {!revealed && oaGuess[i] && (
+                          <div className="mt-2 text-xl font-extrabold bg-white/20 rounded-lg px-3 py-1">
+                            {oaGuess[i] === "H" ? "▲ HIGHER" : "▼ LOWER"}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Reveal banner */}
+                {gameState.game_stage === "one_away_reveal" && oaLastResult && (
+                  <div className={`rounded-xl p-4 text-center animate-slide-up ${
+                    oaLastResult.points > 0 ? "bg-gold text-foreground" : "bg-white/15"
+                  }`}>
+                    {oaLastResult.points > 0 ? (
+                      <>
+                        <p className="text-3xl font-extrabold">PERFECT! +3 POINTS!</p>
+                      </>
+                    ) : (
+                      <p className="text-2xl font-bold">
+                        {oaLastResult.correct} of {oaLastResult.total} right — no points
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* One Away Complete Summary */}
+          {gameState?.game_stage === "one_away_complete" && oneAway && (
+            <div className="w-full max-w-[900px] flex flex-col justify-center animate-scale-in">
+              <h2 className="text-6xl font-extrabold text-center mb-6 text-shadow-lg">
+                ONE AWAY COMPLETE!
+              </h2>
+              <div className="space-y-3">
+                {oneAway.results.map((r) => {
+                  const teamId = `team${r.team}` as TeamId;
+                  const name = r.team === 1 ? gameState.team_1_name || "Team 1" : r.team === 2 ? gameState.team_2_name || "Team 2" : gameState.team_3_name || "Team 3";
+                  return (
+                    <div key={r.team} className={`${teamColorClass(teamId)} rounded-xl p-4 flex items-center justify-between shadow-xl`}>
+                      <span className="text-2xl font-extrabold">{name.toUpperCase()}</span>
+                      <span className="text-2xl font-extrabold">
+                        {r.correct}/{r.total} {r.points > 0 ? "— +3 POINTS!" : "— 0 POINTS"}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

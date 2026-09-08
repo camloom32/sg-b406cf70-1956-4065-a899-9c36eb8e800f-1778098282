@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import type { Json } from "@/integrations/supabase/database.types";
 
 export type Product = Tables<"products">;
 export type GameState = Tables<"game_state">;
@@ -85,6 +86,7 @@ export async function startNewRound(): Promise<boolean> {
       team_1_guess: null,
       team_2_guess: null,
       team_3_guess: null,
+      one_away_state: null,
       game_stage: "guessing",
     })
     .not("id", "is", null);
@@ -211,6 +213,7 @@ export async function resetScores(): Promise<boolean> {
       team_1_guess: null,
       team_2_guess: null,
       team_3_guess: null,
+      one_away_state: null,
       game_stage: "waiting",
     })
     .not("id", "is", null);
@@ -446,6 +449,7 @@ export async function startShowcaseRound(): Promise<boolean> {
     .from("game_state")
     .update({
       game_stage: "showcase",
+      one_away_state: null,
       team_1_showcase_guess: null,
       team_2_showcase_guess: null,
       team_3_showcase_guess: null,
@@ -548,4 +552,223 @@ export async function revealShowcaseResults(): Promise<{ winner: TeamId | "none"
   }
 
   return { winner };
+}
+
+// One Away Round Functions
+
+export interface OneAwayPrize {
+  name: string;
+  image_url: string | null;
+  actual_price: number;
+  fake_price: string;
+}
+
+export interface OneAwayResult {
+  team: number;
+  correct: number;
+  total: number;
+  points: number;
+}
+
+export interface OneAwayState {
+  turn: number;
+  prizes: (OneAwayPrize | null)[];
+  guesses: (string | null)[][];
+  results: OneAwayResult[];
+}
+
+export function parseOneAwayState(raw: Json | null | undefined): OneAwayState | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const s = raw as unknown as OneAwayState;
+  if (typeof s.turn !== "number" || !Array.isArray(s.prizes) || !Array.isArray(s.guesses) || !Array.isArray(s.results)) {
+    return null;
+  }
+  return s;
+}
+
+// Each fake digit is exactly one higher or one lower than the actual digit.
+// Digits 0 and 9 only have one valid direction. No leading zero.
+function generateFakePrice(actualPrice: number): string {
+  const digits = String(Math.round(actualPrice)).split("");
+  return digits
+    .map((d, i) => {
+      const n = parseInt(d, 10);
+      let options: number[];
+      if (n === 0) options = [1];
+      else if (n === 9) options = [8];
+      else options = [n - 1, n + 1];
+      if (i === 0) options = options.filter((o) => o !== 0);
+      if (options.length === 0) options = [n + 1];
+      return String(options[Math.floor(Math.random() * options.length)]);
+    })
+    .join("");
+}
+
+export type OneAwayPrizeRow = Tables<"one_away_prizes">;
+
+// Start One Away: assign a distinct vehicle prize to each team with a fake price
+export async function startOneAwayRound(): Promise<boolean> {
+  const { data, error } = await supabase.from("one_away_prizes").select("*");
+  if (error || !data) {
+    console.error("Error fetching One Away prizes:", error?.message);
+    return false;
+  }
+
+  const unused = data.filter((p) => !p.is_used);
+  const pool = unused.length >= 3 ? unused : data;
+  if (pool.length < 3) {
+    console.error("Not enough vehicle prizes for One Away");
+    return false;
+  }
+
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+
+  const prizes: OneAwayPrize[] = pool.slice(0, 3).map((v) => ({
+    name: v.name,
+    image_url: v.image_url,
+    actual_price: Number(v.actual_price),
+    fake_price: generateFakePrice(Number(v.actual_price)),
+  }));
+
+  const state: OneAwayState = {
+    turn: 1,
+    prizes,
+    guesses: prizes.map((p) => Array(p.fake_price.length).fill(null)),
+    results: [],
+  };
+
+  const { error: stateError } = await supabase
+    .from("game_state")
+    .update({
+      game_stage: "one_away",
+      one_away_state: state as unknown as Json,
+    })
+    .not("id", "is", null);
+
+  if (stateError) {
+    console.error("Error starting One Away round:", stateError.message);
+    return false;
+  }
+
+  return true;
+}
+
+// Write the current team's digit calls (live-updates the TV arrows)
+export async function setOneAwayGuesses(directions: (string | null)[]): Promise<boolean> {
+  const gameState = await getGameState();
+  const state = parseOneAwayState(gameState?.one_away_state);
+  if (!gameState || !state) return false;
+
+  const guesses = [...state.guesses];
+  guesses[state.turn - 1] = directions;
+
+  const { error } = await supabase
+    .from("game_state")
+    .update({ one_away_state: { ...state, guesses } as unknown as Json })
+    .not("id", "is", null);
+
+  if (error) {
+    console.error("Error saving One Away guesses:", error.message);
+    return false;
+  }
+
+  return true;
+}
+
+// Reveal the current team's turn: score it, award 3 points if perfect
+export async function revealOneAway(): Promise<OneAwayResult | null> {
+  const gameState = await getGameState();
+  const state = parseOneAwayState(gameState?.one_away_state);
+  if (!gameState || !state) return null;
+
+  const team = state.turn;
+  const prize = state.prizes[team - 1];
+  const guess = state.guesses[team - 1];
+  if (!prize || !guess || guess.some((g) => g !== "H" && g !== "L")) return null;
+
+  const actualDigits = String(Math.round(prize.actual_price)).split("");
+  const fakeDigits = prize.fake_price.split("");
+  const correct = actualDigits.reduce((count, d, i) => {
+    const answer = Number(d) > Number(fakeDigits[i]) ? "H" : "L";
+    return count + (guess[i] === answer ? 1 : 0);
+  }, 0);
+  const points = correct === actualDigits.length ? 3 : 0;
+
+  const result: OneAwayResult = { team, correct, total: actualDigits.length, points };
+  const results = [...state.results, result];
+
+  const newScore = (gameState[`team_${team}_score` as keyof GameState] as number | null ?? 0) + points;
+  const scoreUpdate =
+    team === 1 ? { team_1_score: newScore } : team === 2 ? { team_2_score: newScore } : { team_3_score: newScore };
+
+  const { error } = await supabase
+    .from("game_state")
+    .update({
+      ...scoreUpdate,
+      one_away_state: { ...state, results } as unknown as Json,
+      game_stage: "one_away_reveal",
+    })
+    .not("id", "is", null);
+
+  if (error) {
+    console.error("Error revealing One Away:", error.message);
+    return null;
+  }
+
+  return result;
+}
+
+// Advance to the next team's turn, or complete the round
+export async function nextOneAwayTurn(): Promise<boolean> {
+  const gameState = await getGameState();
+  const state = parseOneAwayState(gameState?.one_away_state);
+  if (!gameState || !state) return false;
+
+  if (state.turn >= 3) {
+    const { error } = await supabase
+      .from("game_state")
+      .update({ game_stage: "one_away_complete" })
+      .not("id", "is", null);
+    if (error) {
+      console.error("Error completing One Away:", error.message);
+      return false;
+    }
+    return true;
+  }
+
+  const { error } = await supabase
+    .from("game_state")
+    .update({
+      game_stage: "one_away",
+      one_away_state: { ...state, turn: state.turn + 1 } as unknown as Json,
+    })
+    .not("id", "is", null);
+
+  if (error) {
+    console.error("Error advancing One Away turn:", error.message);
+    return false;
+  }
+
+  return true;
+}
+
+// End the round and return to the waiting stage
+export async function endOneAwayRound(): Promise<boolean> {
+  const { error } = await supabase
+    .from("game_state")
+    .update({
+      game_stage: "waiting",
+      one_away_state: null,
+    })
+    .not("id", "is", null);
+
+  if (error) {
+    console.error("Error ending One Away round:", error.message);
+    return false;
+  }
+
+  return true;
 }
