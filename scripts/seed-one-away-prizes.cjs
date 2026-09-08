@@ -15,8 +15,8 @@ const PRIZES = [
   { name: "2025 Subaru Outback Wilderness", image_url: "/showcase/p5-vehicle-outback.jpg", actual_price: 44000 },
   { name: "2025 MINI Cooper SE All Electric", image_url: "/showcase/p6-vehicle-mini-cooper.jpg", actual_price: 39500 },
   { name: "2025 Kia EV9 Land AWD", image_url: "/showcase/p9-vehicle-kia-ev9.jpg", actual_price: 62900 },
-  { name: "2025 Chevrolet Equinox EV LT", image_url: "/showcase/p10-vehicle-equinox-ev.jpg", actual_price: 46500 },
-  { name: "2025 Jeep Wrangler 4xe Rubicon X", image_url: "/showcase/p11-vehicle-jeep-wrangler.jpg", actual_price: 71995 },
+  { name: "2025 Chevrolet Equinox EV LT", image_url: "/showcase/p10-vehicle-equinox-ev.jpg", actual_price: 46199 },
+  { name: "2025 Jeep Wrangler 4xe Rubicon X", image_url: "/showcase/p11-vehicle-jeep-wrangler.jpg", actual_price: 85790 },
   { name: "2025 Tesla Model Y Long Range AWD", image_url: "/showcase/p12-vehicle-tesla-model-y.jpg", actual_price: 56990 },
 ];
 
