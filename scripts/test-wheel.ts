@@ -27,7 +27,7 @@ function velocityFor(target: number, baseRotation: number): number {
   if (idx === -1) throw new Error("bad target: " + target);
   const needed = (((-idx * 18 - baseRotation) % 360) + 360) % 360;
   const travel = needed + 720;
-  const v = travel / 180;
+  const v = travel / 320;
   if (Math.abs(wheelTravelForVelocity(v) - travel) > 0.01) {
     throw new Error(`travel ${travel} got clamped to ${wheelTravelForVelocity(v)}`);
   }

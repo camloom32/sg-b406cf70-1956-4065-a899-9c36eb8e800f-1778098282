@@ -978,7 +978,7 @@ export default function HostController() {
                     onPointerUp={wheelAwaitingSwipe ? handleWheelPointerUp : undefined}
                     onPointerCancel={wheelAwaitingSwipe ? () => (wheelSwipeRef.current = []) : undefined}
                   >
-                    <WheelDisplay size={300} baseRotation={wheel.baseRotation} spin={wheelActiveSpin} onSpinEnd={handleWheelSpinEnd} />
+                    <WheelDisplay size={360} baseRotation={wheel.baseRotation} spin={wheelActiveSpin} onSpinEnd={handleWheelSpinEnd} />
                   </div>
 
                   {/* Phase panels */}

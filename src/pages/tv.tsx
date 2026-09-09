@@ -540,7 +540,7 @@ export default function TVDisplay() {
           {/* The Wheel (Showcase Showdown) Display */}
           {gameState?.game_stage === "wheel" && wheel && (
             <div className="w-full max-w-[1700px] flex flex-wrap items-center justify-center gap-12 animate-scale-in">
-              <WheelDisplay size={560} baseRotation={wheel.baseRotation} spin={wheelActiveSpin} />
+              <WheelDisplay size={660} baseRotation={wheel.baseRotation} spin={wheelActiveSpin} sound />
               <div className="flex-1 min-w-[440px] max-w-[820px] space-y-4">
                 <h2 className="text-6xl font-extrabold text-center text-shadow-lg">
                   SHOWCASE SHOWDOWN!

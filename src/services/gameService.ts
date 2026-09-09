@@ -853,8 +853,9 @@ export function parseWheelState(raw: Json | null | undefined): WheelState | null
 
 // Map swipe velocity (px/ms) to wheel travel in degrees.
 // The wheel must complete at least one full revolution for the spin to count.
+// Tuned per Cam: the wheel should spin a lot more (1.2 to 16 revolutions).
 export function wheelTravelForVelocity(velocity: number): number {
-  return Math.min(8 * 360, Math.max(1.08 * 360, velocity * 180));
+  return Math.min(16 * 360, Math.max(1.2 * 360, velocity * 320));
 }
 
 // Section under the top pointer when the wheel sits at `rotation` degrees (clockwise).
@@ -868,7 +869,7 @@ function buildWheelSpin(baseRotation: number, velocity: number): WheelSpin {
   const travel = wheelTravelForVelocity(velocity);
   const toRotation = baseRotation + travel;
   const value = WHEEL_SECTIONS[wheelSectionAtRotation(toRotation)];
-  const durationMs = Math.round(Math.min(6500, Math.max(2600, (travel / 360) * 1250)));
+  const durationMs = Math.round(Math.min(8500, Math.max(2800, (travel / 360) * 900)));
   return { value, fromRotation: baseRotation, toRotation, durationMs, at: Date.now() };
 }
 
