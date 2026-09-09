@@ -293,33 +293,35 @@ export default function TVDisplay() {
           </div>
         )}
 
-        {/* Header with Scores - Compact for 3 teams */}
-        <header className="px-4 py-2">
-          <div className="flex items-center justify-between gap-2 max-w-[1920px] mx-auto">
-            {(["team1", "team2", "team3"] as TeamId[]).map((team) => {
-              const num = team === "team1" ? "1" : team === "team2" ? "2" : "3";
-              const score = gameState?.[`team_${num}_score` as keyof GameStateWithProduct] as number || 0;
-              const name = gameState?.[`team_${num}_name` as keyof GameStateWithProduct] as string || `Team ${num}`;
-              const colorClass = team === "team1" ? "bg-team1" : team === "team2" ? "bg-team2" : "bg-team3";
-              return (
-                <div key={team} className="flex-1">
-                  <div className={`${colorClass} rounded-xl p-2 shadow-lg ${showWinnerAnimation && winner === team ? "animate-winner-pulse ring-4 ring-gold" : ""}`}>
-                    <div className="flex items-center gap-1 mb-0.5">
-                      <Users className="w-3 h-3" />
-                      <span className="font-bold truncate text-sm">{name.toUpperCase()}</span>
+        {/* Header with Scores - Hidden during Showcase Showdown */}
+        {gameState?.game_stage !== "wheel" && gameState?.game_stage !== "wheel_complete" && (
+          <header className="px-4 py-2">
+            <div className="flex items-center justify-between gap-2 max-w-[1920px] mx-auto">
+              {(["team1", "team2", "team3"] as TeamId[]).map((team) => {
+                const num = team === "team1" ? "1" : team === "team2" ? "2" : "3";
+                const score = gameState?.[`team_${num}_score` as keyof GameStateWithProduct] as number || 0;
+                const name = gameState?.[`team_${num}_name` as keyof GameStateWithProduct] as string || `Team ${num}`;
+                const colorClass = team === "team1" ? "bg-team1" : team === "team2" ? "bg-team2" : "bg-team3";
+                return (
+                  <div key={team} className="flex-1">
+                    <div className={`${colorClass} rounded-xl p-2 shadow-lg ${showWinnerAnimation && winner === team ? "animate-winner-pulse ring-4 ring-gold" : ""}`}>
+                      <div className="flex items-center gap-1 mb-0.5">
+                        <Users className="w-3 h-3" />
+                        <span className="font-bold truncate text-sm">{name.toUpperCase()}</span>
+                      </div>
+                      <div className="font-extrabold text-3xl">{score}</div>
                     </div>
-                    <div className="font-extrabold text-3xl">{score}</div>
                   </div>
+                );
+              })}
+              <div className="flex-shrink-0 text-center px-1">
+                <div className="bg-gold text-foreground rounded-full shadow-xl animate-glow inline-block p-1.5">
+                  <DollarSign className="w-5 h-5" />
                 </div>
-              );
-            })}
-            <div className="flex-shrink-0 text-center px-1">
-              <div className="bg-gold text-foreground rounded-full shadow-xl animate-glow inline-block p-1.5">
-                <DollarSign className="w-5 h-5" />
               </div>
             </div>
-          </div>
-        </header>
+          </header>
+        )}
 
         {/* Main Content Area */}
         <main className="flex-1 flex items-center justify-center px-8 pb-8 overflow-hidden">
@@ -539,85 +541,84 @@ export default function TVDisplay() {
 
           {/* The Wheel (Showcase Showdown) Display */}
           {gameState?.game_stage === "wheel" && wheel && (
-            <div className="w-full max-w-[1700px] flex flex-wrap items-center justify-center gap-12 animate-scale-in">
-              <WheelDisplay size={660} baseRotation={wheel.baseRotation} spin={wheelActiveSpin} sound />
-              <div className="flex-1 min-w-[440px] max-w-[820px] space-y-4">
-                <h2 className="text-6xl font-extrabold text-center text-shadow-lg">
-                  SHOWCASE SHOWDOWN!
-                </h2>
-                <div className={`${wheelActiveTeam ? teamColorClass(`team${wheelActiveTeam}` as TeamId) : "bg-white/15"} rounded-2xl p-5 shadow-2xl text-center`}>
+            <div className="w-full h-full flex items-center justify-center gap-6 animate-scale-in px-4">
+              <WheelDisplay size={520} baseRotation={wheel.baseRotation} spin={wheelActiveSpin} sound />
+              <div className="flex flex-col justify-center gap-3 min-w-[380px] max-w-[520px]">
+                {/* Status */}
+                <div className={`${wheelActiveTeam ? teamColorClass(`team${wheelActiveTeam}` as TeamId) : "bg-white/15"} rounded-2xl p-4 shadow-2xl text-center`}>
                   {wheel.phase === "spin" && (
                     <>
-                      <p className="text-4xl font-extrabold">{wheelTeamName(wheel.turn).toUpperCase()} - SPIN THE WHEEL!</p>
-                      <p className="text-xl mt-2 opacity-90">Closest to $1.00 without going over wins 3 points</p>
+                      <p className="text-3xl font-extrabold">{wheelTeamName(wheel.turn).toUpperCase()} - SPIN THE WHEEL!</p>
+                      <p className="text-lg mt-1 opacity-90">Closest to $1.00 without going over wins 3 points</p>
                     </>
                   )}
-                  {wheel.phase === "spinning" && <p className="text-4xl font-extrabold animate-pulse">SPINNING...</p>}
+                  {wheel.phase === "spinning" && <p className="text-3xl font-extrabold animate-pulse">SPINNING...</p>}
                   {wheel.phase === "choose" && (
                     <>
-                      <p className="text-4xl font-extrabold">SPIN AGAIN OR STAY?</p>
-                      <p className="text-xl mt-2 opacity-90">
+                      <p className="text-3xl font-extrabold">SPIN AGAIN OR STAY?</p>
+                      <p className="text-lg mt-1 opacity-90">
                         {wheelTeamName(wheel.turn).toUpperCase()} sits at {formatWheelLabel(wheel.teams[wheel.turn - 1]?.total ?? 0)}
                       </p>
                     </>
                   )}
                   {wheel.phase === "turn_end" && wheel.spinoff && wheel.spinoff.idx >= wheel.spinoff.order.length ? (
-                    <p className="text-4xl font-extrabold">SPIN-OFF COMPLETE!</p>
+                    <p className="text-3xl font-extrabold">SPIN-OFF COMPLETE!</p>
                   ) : wheel.phase === "turn_end" ? (
                     <>
                       {wheel.teams[wheel.turn - 1]?.status === "dollar" ? (
                         <>
-                          <p className="text-4xl font-extrabold">EXACTLY $1.00!</p>
-                          <p className="text-2xl mt-2 font-bold">+3 POINTS AND A BONUS SPIN!</p>
+                          <p className="text-3xl font-extrabold">EXACTLY $1.00!</p>
+                          <p className="text-xl mt-1 font-bold">+3 POINTS AND A BONUS SPIN!</p>
                         </>
                       ) : wheel.teams[wheel.turn - 1]?.status === "bust" ? (
-                        <p className="text-4xl font-extrabold">OVER $1.00 - BUST!</p>
+                        <p className="text-3xl font-extrabold">OVER $1.00 - BUST!</p>
                       ) : (
-                        <p className="text-4xl font-extrabold">{formatWheelLabel(wheel.teams[wheel.turn - 1]?.total ?? 0)}</p>
+                        <p className="text-3xl font-extrabold">{formatWheelLabel(wheel.teams[wheel.turn - 1]?.total ?? 0)}</p>
                       )}
                     </>
                   ) : null}
                   {wheel.phase === "bonus" && (
                     <>
-                      <p className="text-4xl font-extrabold">{wheelTeamName(wheel.bonusActiveTeam ?? 0).toUpperCase()} - BONUS SPIN!</p>
-                      <p className="text-xl mt-2 opacity-90">Land $1.00 for $25,000. 5¢ or 15¢ pays $10,000</p>
+                      <p className="text-3xl font-extrabold">{wheelTeamName(wheel.bonusActiveTeam ?? 0).toUpperCase()} - BONUS SPIN!</p>
+                      <p className="text-lg mt-1 opacity-90">Land $1.00 for $25,000. 5¢ or 15¢ pays $10,000</p>
                     </>
                   )}
-                  {wheel.phase === "bonus_spinning" && <p className="text-4xl font-extrabold animate-pulse">BONUS SPIN...</p>}
+                  {wheel.phase === "bonus_spinning" && <p className="text-3xl font-extrabold animate-pulse">BONUS SPIN...</p>}
                   {wheel.phase === "bonus_done" && wheel.bonusSpin && (
                     <>
                       {wheel.bonusSpin.value === 100 ? (
-                        <p className="text-4xl font-extrabold">$1.00 - $25,000!!!</p>
+                        <p className="text-3xl font-extrabold">$1.00 - $25,000!!!</p>
                       ) : wheel.bonusSpin.value === 5 || wheel.bonusSpin.value === 15 ? (
-                        <p className="text-4xl font-extrabold">{formatWheelLabel(wheel.bonusSpin.value)} - $10,000!!!</p>
+                        <p className="text-3xl font-extrabold">{formatWheelLabel(wheel.bonusSpin.value)} - $10,000!!!</p>
                       ) : (
-                        <p className="text-4xl font-extrabold">{formatWheelLabel(wheel.bonusSpin.value)} - no bonus cash</p>
+                        <p className="text-3xl font-extrabold">{formatWheelLabel(wheel.bonusSpin.value)} - no bonus cash</p>
                       )}
                     </>
                   )}
                   {(wheel.phase === "spinoff" || wheel.phase === "spinoff_spinning") && wheel.spinoff && (
                     <>
-                      <p className="text-4xl font-extrabold">
+                      <p className="text-3xl font-extrabold">
                         {wheel.phase === "spinoff"
                           ? `SPIN-OFF! ${wheelTeamName(wheel.spinoff.order[wheel.spinoff.idx] ?? 0).toUpperCase()} - ONE SPIN!`
                           : "SPIN-OFF SPIN..."}
                       </p>
                       {wheel.spinoff.spins.length > 0 && (
-                        <p className="text-xl mt-2 opacity-90">
+                        <p className="text-lg mt-1 opacity-90">
                           {wheel.spinoff.spins.map((s) => `${wheelTeamName(s.team)}: ${formatWheelLabel(s.spin.value)}`).join(", ")}
                         </p>
                       )}
                     </>
                   )}
                 </div>
+                {/* Team scores */}
                 <div className="space-y-2">
                   {wheel.teams.map((t) => {
                     const teamId = `team${t.team}` as TeamId;
                     const isActive = wheelActiveTeam === t.team;
                     return (
                       <div key={t.team} className={`${teamColorClass(teamId)} rounded-xl p-3 flex items-center justify-between shadow-xl ${isActive ? "ring-4 ring-gold" : "opacity-80"}`}>
-                        <span className="text-2xl font-extrabold truncate mr-4">{wheelTeamName(t.team).toUpperCase()}</span>
-                        <span className="text-2xl font-extrabold whitespace-nowrap">
+                        <span className="text-xl font-extrabold truncate mr-4">{wheelTeamName(t.team).toUpperCase()}</span>
+                        <span className="text-xl font-extrabold whitespace-nowrap">
                           {t.status === "bust" ? (
                             <span className="line-through">{formatWheelLabel(t.total)}</span>
                           ) : t.status === "dollar" ? (
@@ -638,25 +639,26 @@ export default function TVDisplay() {
 
           {/* Wheel Complete Summary */}
           {gameState?.game_stage === "wheel_complete" && wheel && (
-            <div className="w-full max-w-[1000px] flex flex-col justify-center animate-scale-in">
-              <h2 className="text-6xl font-extrabold text-center mb-6 text-shadow-lg">
-                SHOWCASE SHOWDOWN COMPLETE!
-              </h2>
-              <div className="space-y-3">
-                {wheel.teams.map((t) => {
-                  const teamId = `team${t.team}` as TeamId;
-                  const isWinner = wheel.winners.includes(t.team);
-                  return (
-                    <div key={t.team} className={`${teamColorClass(teamId)} rounded-xl p-4 flex items-center justify-between shadow-xl ${isWinner ? "ring-4 ring-gold animate-winner-pulse" : "opacity-80"}`}>
-                      <span className="text-2xl font-extrabold">{wheelTeamName(t.team).toUpperCase()}</span>
-                      <span className="text-2xl font-extrabold">
-                        {t.status === "bust"
-                          ? `${formatWheelLabel(t.total)} - BUST`
-                          : `${formatWheelLabel(t.total)}${isWinner ? " - +3 POINTS!" : ""}${t.status === "dollar" ? " + BONUS SPIN" : ""}`}
-                      </span>
-                    </div>
-                  );
-                })}
+            <div className="w-full h-full flex items-center justify-center gap-6 animate-scale-in px-4">
+              <WheelDisplay size={520} baseRotation={wheel.baseRotation} spin={null} />
+              <div className="flex flex-col justify-center gap-4 min-w-[380px] max-w-[520px]">
+                <p className="text-4xl font-extrabold text-center text-shadow-lg">SHOWCASE SHOWDOWN COMPLETE!</p>
+                <div className="space-y-2">
+                  {wheel.teams.map((t) => {
+                    const teamId = `team${t.team}` as TeamId;
+                    const isWinner = wheel.winners.includes(t.team);
+                    return (
+                      <div key={t.team} className={`${teamColorClass(teamId)} rounded-xl p-3 flex items-center justify-between shadow-xl ${isWinner ? "ring-4 ring-gold animate-winner-pulse" : "opacity-80"}`}>
+                        <span className="text-xl font-extrabold">{wheelTeamName(t.team).toUpperCase()}</span>
+                        <span className="text-xl font-extrabold">
+                          {t.status === "bust"
+                            ? `${formatWheelLabel(t.total)} - BUST`
+                            : `${formatWheelLabel(t.total)}${isWinner ? " - +3 POINTS!" : ""}${t.status === "dollar" ? " + BONUS SPIN" : ""}`}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           )}
