@@ -855,7 +855,7 @@ export function parseWheelState(raw: Json | null | undefined): WheelState | null
 // The wheel must complete at least one full revolution for the spin to count.
 // Tuned per Cam: the wheel should spin a lot more (1.2 to 16 revolutions).
 export function wheelTravelForVelocity(velocity: number): number {
-  return Math.min(16 * 360, Math.max(1.2 * 360, velocity * 320));
+  return Math.min(16 * 360, Math.max(1.2 * 360, velocity * 1000));
 }
 
 // Section under the top pointer when the wheel sits at `rotation` degrees (clockwise).

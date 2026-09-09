@@ -179,6 +179,42 @@ export function WheelDisplay({
                 {w.label}
               </text>
             ))}
+            {/* Tread / rim numbers like the show */}
+            {WEDGES.map((w, i) => (
+              <text
+                key={`t${i}`}
+                x={CX}
+                y={CY - 176}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fontSize={12}
+                fontWeight={800}
+                fill={w.labelFill}
+                fontFamily="Arial, Helvetica, sans-serif"
+                transform={`rotate(${w.rotation} ${CX} ${CY})`}
+              >
+                {w.label}
+              </text>
+            ))}
+            {/* Rim tick marks */}
+            {WEDGES.map((_, i) => {
+              const a = (i * 18 * Math.PI) / 180;
+              const x1 = CX + 186 * Math.sin(a);
+              const y1 = CY - 186 * Math.cos(a);
+              const x2 = CX + 194 * Math.sin(a);
+              const y2 = CY - 194 * Math.cos(a);
+              return (
+                <line
+                  key={`tick${i}`}
+                  x1={x1}
+                  y1={y1}
+                  x2={x2}
+                  y2={y2}
+                  stroke="#fbbf24"
+                  strokeWidth={2}
+                />
+              );
+            })}
           </g>
           <circle cx={CX} cy={CY} r={32} fill="#0c1440" stroke="#fbbf24" strokeWidth={4} />
           <text

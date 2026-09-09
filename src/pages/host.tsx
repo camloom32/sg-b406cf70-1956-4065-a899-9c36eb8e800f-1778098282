@@ -464,7 +464,7 @@ export default function HostController() {
     wheelSwipeRef.current = [];
     if (h.length < 2) return;
     const up = { x: e.clientX, y: e.clientY, t: Date.now() };
-    const cutoff = up.t - 120;
+    const cutoff = up.t - 200;
     let start = h[0];
     for (const s of h) {
       if (s.t >= cutoff) {
@@ -474,7 +474,12 @@ export default function HostController() {
     }
     const dist = Math.hypot(up.x - start.x, up.y - start.y);
     const dt = Math.max(1, up.t - start.t);
-    if (dist < 30) return;
+    // Treat a quick tap as a decent spin so the wheel always responds
+    if (dist < 15 && dt < 400) {
+      void handleWheelSwipe(2.5);
+      return;
+    }
+    if (dist < 15) return;
     void handleWheelSwipe(dist / dt);
   };
 
@@ -976,6 +981,7 @@ export default function HostController() {
                     onPointerDown={wheelAwaitingSwipe ? handleWheelPointerDown : undefined}
                     onPointerMove={wheelAwaitingSwipe ? handleWheelPointerMove : undefined}
                     onPointerUp={wheelAwaitingSwipe ? handleWheelPointerUp : undefined}
+                    onPointerLeave={wheelAwaitingSwipe ? () => (wheelSwipeRef.current = []) : undefined}
                     onPointerCancel={wheelAwaitingSwipe ? () => (wheelSwipeRef.current = []) : undefined}
                   >
                     <WheelDisplay size={360} baseRotation={wheel.baseRotation} spin={wheelActiveSpin} onSpinEnd={handleWheelSpinEnd} />
