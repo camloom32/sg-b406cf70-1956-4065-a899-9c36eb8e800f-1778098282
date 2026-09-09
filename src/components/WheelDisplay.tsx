@@ -212,7 +212,7 @@ export function WheelDisplay({
                   alignItems: "center",
                   justifyContent: "center",
                   backfaceVisibility: "hidden",
-                  transform: `rotateX(${angle}deg) translateZ(${RADIUS}px) rotateZ(0deg)`,
+                  transform: `rotateY(${angle}deg) translateZ(${RADIUS}px) rotateZ(0deg)`,
                 }}
               >
                 <span
