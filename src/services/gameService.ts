@@ -781,7 +781,8 @@ export async function endOneAwayRound(): Promise<boolean> {
 
 // Real Big Wheel layout: 20 sections in clockwise order. $1.00 sits at index 0
 // (top) flanked by 5c and 15c, the sections that pay on a bonus spin.
-export const WHEEL_SECTIONS: number[] = [100, 15, 80, 35, 60, 20, 40, 75, 55, 95, 85, 45, 65, 70, 10, 90, 50, 25, 30, 5];
+// Source: priceisright.fandom.com/wiki/Big_Wheel_Numbers
+export const WHEEL_SECTIONS: number[] = [100, 15, 80, 35, 60, 20, 40, 75, 55, 95, 50, 85, 30, 65, 10, 45, 70, 25, 90, 5];
 
 export interface WheelSpin {
   value: number; // cents
@@ -861,8 +862,7 @@ export function wheelTravelForVelocity(velocity: number): number {
 // Section under the top pointer when the wheel sits at `rotation` degrees (clockwise).
 // Section i is centered at wheel-local angle i*18; the pointer sits at global angle 0.
 export function wheelSectionAtRotation(rotation: number): number {
-  const norm = ((360 - (rotation % 360)) % 360 + 360) % 360;
-  return Math.round(norm / 18) % 20;
+  return (Math.round((rotation % 360 + 360) % 360 / 18) - 5 + 20) % 20;
 }
 
 function buildWheelSpin(baseRotation: number, velocity: number): WheelSpin {

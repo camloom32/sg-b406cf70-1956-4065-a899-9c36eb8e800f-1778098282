@@ -191,7 +191,7 @@ export function WheelDisplay({
             width: 0,
             height: 0,
             transformStyle: "preserve-3d",
-            transform: `rotateX(${rotation - 90}deg)`,
+            transform: `rotateX(${90 - rotation}deg)`,
           }}
         >
           {WHEEL_SECTIONS.map((v, i) => {
@@ -222,6 +222,8 @@ export function WheelDisplay({
                     color: panelTextColor(v),
                     fontFamily: "Arial, Helvetica, sans-serif",
                     whiteSpace: "nowrap",
+                    display: "inline-block",
+                    transform: "rotateZ(90deg)",
                   }}
                 >
                   {formatWheelLabel(v)}
