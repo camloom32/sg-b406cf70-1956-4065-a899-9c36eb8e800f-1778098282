@@ -1,51 +1,35 @@
 import { useEffect, useRef, useState } from "react";
 import { WHEEL_SECTIONS, type WheelSpin } from "@/services/gameService";
 
-const CX = 200;
-const CY = 200;
-const R = 186;
-const LABEL_RADIUS = 138;
+const PANELS = 20;
+const ANGLE = 360 / PANELS; // 18 degrees
+const PANEL_W = 74;
+const PANEL_H = 130;
+const RADIUS = PANEL_W / (2 * Math.sin(Math.PI / PANELS)); // ~235px
+const SCENE_W = Math.ceil(2 * (RADIUS + PANEL_W / 2 + 20)); // + margin for pointer
+const SCENE_H = PANEL_H + 100; // extra for end caps
 
-function polar(angleDeg: number, radius: number): [number, number] {
-  const rad = (angleDeg * Math.PI) / 180;
-  return [CX + radius * Math.sin(rad), CY - radius * Math.cos(rad)];
+function panelBg(v: number): string {
+  if (v === 100) return "#c41e3a";
+  if (v === 5 || v === 15) return "#228b22";
+  return "#1a1a1a";
 }
 
-function wedgePath(i: number): string {
-  const [x1, y1] = polar(i * 18 - 9, R);
-  const [x2, y2] = polar(i * 18 + 9, R);
-  return `M ${CX} ${CY} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${R} ${R} 0 0 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`;
+function panelTextColor(_v: number): string {
+  return "#f5e6c8";
 }
 
-function wedgeFill(i: number): string {
-  const v = WHEEL_SECTIONS[i];
+function panelBorder(v: number): string {
   if (v === 100) return "#fbbf24";
-  if (v === 5 || v === 15) return "#16a34a";
-  return i % 2 === 0 ? "#dc2626" : "#fde9c8";
-}
-
-function wedgeLabelFill(i: number): string {
-  const v = WHEEL_SECTIONS[i];
-  if (v === 100) return "#422006";
-  if (v === 5 || v === 15) return "#ffffff";
-  return i % 2 === 0 ? "#ffffff" : "#7c2d12";
+  if (v === 5 || v === 15) return "#f5e6c8";
+  return "#c9a227";
 }
 
 export function formatWheelLabel(v: number): string {
-  return v === 100 ? "$1.00" : `${v}¢`;
+  return v === 100 ? "100" : `${v}`;
 }
 
-const WEDGES = WHEEL_SECTIONS.map((v, i) => ({
-  path: wedgePath(i),
-  fill: wedgeFill(i),
-  labelFill: wedgeLabelFill(i),
-  label: formatWheelLabel(v),
-  rotation: i * 18,
-  fontSize: v === 100 ? 15 : 19,
-}));
-
 // ---- Ratchet tick sound (Web Audio, no assets) ----
-// One click per section boundary crossing, so the tick rate follows wheel speed.
 let audioCtx: AudioContext | null = null;
 
 function playTick(intensity: number) {
@@ -67,9 +51,6 @@ function playTick(intensity: number) {
   }
 }
 
-const TREAD_LAYERS = 12;
-const TREAD_DEPTH = 6;
-
 interface WheelDisplayProps {
   size: number;
   baseRotation: number;
@@ -80,15 +61,12 @@ interface WheelDisplayProps {
   sound?: boolean;
 }
 
-// Show-style view: the wheel stands up and the camera looks across the tread,
-// so you see the rim edge more than the face. Tilt is rotateX on a 3D stack.
 export function WheelDisplay({
   size,
   baseRotation,
   spin,
   onSpinEnd,
   className,
-  tilt = 62,
   sound = false,
 }: WheelDisplayProps) {
   const [rotation, setRotation] = useState(baseRotation);
@@ -130,107 +108,138 @@ export function WheelDisplay({
     return () => cancelAnimationFrame(raf);
   }, [spin, baseRotation, sound]);
 
-  const projectedHeight = size * Math.cos((tilt * Math.PI) / 180) + TREAD_LAYERS * TREAD_DEPTH + 40;
+  const scale = size / SCENE_W;
 
   return (
-    <div className={className} style={{ perspective: 1200, width: size, height: projectedHeight }}>
+    <div
+      className={className}
+      style={{
+        perspective: 1200,
+        width: size,
+        height: size * (SCENE_H / SCENE_W),
+        overflow: "hidden",
+      }}
+    >
       <div
         style={{
+          transform: `scale(${scale})`,
+          transformOrigin: "top left",
+          width: SCENE_W,
+          height: SCENE_H,
           position: "relative",
-          width: size,
-          height: size,
-          transformStyle: "preserve-3d",
-          transform: `rotateX(${tilt}deg)`,
         }}
       >
-        {[...Array(TREAD_LAYERS)].map((_, i) => (
-          <div
-            key={i}
-            style={{
-              position: "absolute",
-              inset: 0,
-              borderRadius: "50%",
-              background: i === TREAD_LAYERS - 1 ? "#081540" : "#0c1e52",
-              transform: `translateZ(${-(i + 1) * TREAD_DEPTH}px)`,
-              boxShadow: "inset 0 0 40px rgba(0,0,0,0.5)",
-            }}
-          />
-        ))}
-        <svg width={size} height={size} viewBox="0 0 400 400" style={{ position: "relative", display: "block" }}>
-          <circle cx={CX} cy={CY} r={198} fill="#0c1440" />
-          <circle cx={CX} cy={CY} r={192} fill="#1e3a8a" />
-          <g transform={`rotate(${rotation} ${CX} ${CY})`}>
-            {WEDGES.map((w, i) => (
-              <path key={i} d={w.path} fill={w.fill} stroke="#0c1440" strokeWidth={2} />
-            ))}
-            {WEDGES.map((w, i) => (
-              <text
-                key={`l${i}`}
-                x={CX}
-                y={CY - LABEL_RADIUS}
-                textAnchor="middle"
-                dominantBaseline="central"
-                fontSize={w.fontSize}
-                fontWeight={900}
-                fill={w.labelFill}
-                fontFamily="Arial, Helvetica, sans-serif"
-                transform={`rotate(${w.rotation} ${CX} ${CY})`}
+        {/* End caps (top and bottom rings) */}
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: (SCENE_H - PANEL_H) / 2 - 10,
+            transform: "translateX(-50%)",
+            width: PANEL_W + 16,
+            height: 10,
+            background: "#0c1440",
+            borderRadius: "50%",
+            zIndex: 2,
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: (SCENE_H + PANEL_H) / 2,
+            transform: "translateX(-50%)",
+            width: PANEL_W + 16,
+            height: 10,
+            background: "#0c1440",
+            borderRadius: "50%",
+            zIndex: 2,
+          }}
+        />
+
+        {/* Central hub (static, overlaid on front) */}
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 44,
+            height: 44,
+            borderRadius: "50%",
+            background: "#0c1440",
+            border: "3px solid #fbbf24",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 24,
+            fontWeight: 900,
+            color: "#fbbf24",
+            fontFamily: "Arial, Helvetica, sans-serif",
+            zIndex: 10,
+          }}
+        >
+          $
+        </div>
+
+        {/* The drum */}
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            width: 0,
+            height: 0,
+            transformStyle: "preserve-3d",
+            transform: `rotateY(${rotation}deg)`,
+          }}
+        >
+          {WHEEL_SECTIONS.map((v, i) => {
+            const angle = i * ANGLE;
+            return (
+              <div
+                key={i}
+                style={{
+                  position: "absolute",
+                  left: -PANEL_W / 2,
+                  top: -PANEL_H / 2,
+                  width: PANEL_W,
+                  height: PANEL_H,
+                  background: panelBg(v),
+                  border: `3px solid ${panelBorder(v)}`,
+                  borderRadius: 4,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: v === 100 ? 36 : 32,
+                  fontWeight: 900,
+                  color: panelTextColor(v),
+                  fontFamily: "Arial, Helvetica, sans-serif",
+                  backfaceVisibility: "hidden",
+                  transform: `rotateY(${angle}deg) translateZ(${RADIUS}px)`,
+                }}
               >
-                {w.label}
-              </text>
-            ))}
-            {/* Tread / rim numbers like the show */}
-            {WEDGES.map((w, i) => (
-              <text
-                key={`t${i}`}
-                x={CX}
-                y={CY - 176}
-                textAnchor="middle"
-                dominantBaseline="central"
-                fontSize={12}
-                fontWeight={800}
-                fill={w.labelFill}
-                fontFamily="Arial, Helvetica, sans-serif"
-                transform={`rotate(${w.rotation} ${CX} ${CY})`}
-              >
-                {w.label}
-              </text>
-            ))}
-            {/* Rim tick marks */}
-            {WEDGES.map((_, i) => {
-              const a = (i * 18 * Math.PI) / 180;
-              const x1 = CX + 186 * Math.sin(a);
-              const y1 = CY - 186 * Math.cos(a);
-              const x2 = CX + 194 * Math.sin(a);
-              const y2 = CY - 194 * Math.cos(a);
-              return (
-                <line
-                  key={`tick${i}`}
-                  x1={x1}
-                  y1={y1}
-                  x2={x2}
-                  y2={y2}
-                  stroke="#fbbf24"
-                  strokeWidth={2}
-                />
-              );
-            })}
-          </g>
-          <circle cx={CX} cy={CY} r={32} fill="#0c1440" stroke="#fbbf24" strokeWidth={4} />
-          <text
-            x={CX}
-            y={CY + 1}
-            textAnchor="middle"
-            dominantBaseline="central"
-            fontSize={32}
-            fontWeight={900}
-            fill="#fbbf24"
-            fontFamily="Arial, Helvetica, sans-serif"
-          >
-            $
-          </text>
-          <polygon points={`${CX},64 ${CX - 16},20 ${CX + 16},20`} fill="#fbbf24" stroke="#0c1440" strokeWidth={3} />
-        </svg>
+                {formatWheelLabel(v)}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Pointer on the right side */}
+        <div
+          style={{
+            position: "absolute",
+            right: 10,
+            top: "50%",
+            transform: "translateY(-50%)",
+            zIndex: 20,
+            filter: "drop-shadow(2px 2px 2px rgba(0,0,0,0.5))",
+          }}
+        >
+          <svg width="32" height="40" viewBox="0 0 32 40">
+            <polygon points="32,20 0,0 0,40" fill="#f97316" stroke="#0c1440" strokeWidth="2" />
+          </svg>
+        </div>
       </div>
     </div>
   );
