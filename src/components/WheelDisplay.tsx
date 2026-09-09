@@ -3,11 +3,11 @@ import { WHEEL_SECTIONS, type WheelSpin } from "@/services/gameService";
 
 const PANELS = 20;
 const ANGLE = 360 / PANELS; // 18 degrees
-const PANEL_W = 74;
-const PANEL_H = 130;
-const RADIUS = PANEL_W / (2 * Math.sin(Math.PI / PANELS)); // ~235px
-const SCENE_W = Math.ceil(2 * (RADIUS + PANEL_W / 2 + 20)); // + margin for pointer
-const SCENE_H = PANEL_H + 100; // extra for end caps
+const PANEL_W = 52;
+const PANEL_H = 88;
+const RADIUS = PANEL_W / (2 * Math.sin(Math.PI / PANELS)); // ~166px
+const SCENE_W = PANEL_H + 80; // width of drum face + padding
+const SCENE_H = Math.ceil(2 * (RADIUS + PANEL_W / 2 + 30)); // height = circumference diameter + padding
 
 function panelBg(v: number): string {
   if (v === 100) return "#c41e3a";
@@ -129,15 +129,15 @@ export function WheelDisplay({
           position: "relative",
         }}
       >
-        {/* End caps (top and bottom rings) */}
+        {/* End caps (left and right rings for vertical wheel) */}
         <div
           style={{
             position: "absolute",
-            left: "50%",
-            top: (SCENE_H - PANEL_H) / 2 - 10,
-            transform: "translateX(-50%)",
-            width: PANEL_W + 16,
-            height: 10,
+            left: (SCENE_W - PANEL_H) / 2 - 10,
+            top: "50%",
+            transform: "translateY(-50%)",
+            width: 10,
+            height: PANEL_W + 16,
             background: "#0c1440",
             borderRadius: "50%",
             zIndex: 2,
@@ -146,11 +146,11 @@ export function WheelDisplay({
         <div
           style={{
             position: "absolute",
-            left: "50%",
-            top: (SCENE_H + PANEL_H) / 2,
-            transform: "translateX(-50%)",
-            width: PANEL_W + 16,
-            height: 10,
+            left: (SCENE_W + PANEL_H) / 2,
+            top: "50%",
+            transform: "translateY(-50%)",
+            width: 10,
+            height: PANEL_W + 16,
             background: "#0c1440",
             borderRadius: "50%",
             zIndex: 2,
@@ -182,7 +182,7 @@ export function WheelDisplay({
           $
         </div>
 
-        {/* The drum */}
+        {/* The drum - vertical wheel spinning around horizontal axis */}
         <div
           style={{
             position: "absolute",
@@ -191,7 +191,7 @@ export function WheelDisplay({
             width: 0,
             height: 0,
             transformStyle: "preserve-3d",
-            transform: `rotateY(${rotation}deg)`,
+            transform: `rotateX(${rotation - 90}deg)`,
           }}
         >
           {WHEEL_SECTIONS.map((v, i) => {
@@ -211,33 +211,39 @@ export function WheelDisplay({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: v === 100 ? 36 : 32,
-                  fontWeight: 900,
-                  color: panelTextColor(v),
-                  fontFamily: "Arial, Helvetica, sans-serif",
                   backfaceVisibility: "hidden",
-                  transform: `rotateY(${angle}deg) translateZ(${RADIUS}px)`,
+                  transform: `rotateX(${angle}deg) translateZ(${RADIUS}px) rotateZ(-90deg)`,
                 }}
               >
-                {formatWheelLabel(v)}
+                <span
+                  style={{
+                    fontSize: v === 100 ? 20 : 18,
+                    fontWeight: 900,
+                    color: panelTextColor(v),
+                    fontFamily: "Arial, Helvetica, sans-serif",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {formatWheelLabel(v)}
+                </span>
               </div>
             );
           })}
         </div>
 
-        {/* Pointer on the right side */}
+        {/* Pointer at the top */}
         <div
           style={{
             position: "absolute",
-            right: 10,
-            top: "50%",
-            transform: "translateY(-50%)",
+            left: "50%",
+            top: 8,
+            transform: "translateX(-50%)",
             zIndex: 20,
             filter: "drop-shadow(2px 2px 2px rgba(0,0,0,0.5))",
           }}
         >
-          <svg width="32" height="40" viewBox="0 0 32 40">
-            <polygon points="32,20 0,0 0,40" fill="#f97316" stroke="#0c1440" strokeWidth="2" />
+          <svg width="40" height="32" viewBox="0 0 40 32">
+            <polygon points="20,0 0,32 40,32" fill="#f97316" stroke="#0c1440" strokeWidth="2" />
           </svg>
         </div>
       </div>
