@@ -87,6 +87,7 @@ export async function startNewRound(): Promise<boolean> {
       team_2_guess: null,
       team_3_guess: null,
       one_away_state: null,
+      wheel_state: null,
       game_stage: "guessing",
     })
     .not("id", "is", null);
@@ -214,6 +215,7 @@ export async function resetScores(): Promise<boolean> {
       team_2_guess: null,
       team_3_guess: null,
       one_away_state: null,
+      wheel_state: null,
       game_stage: "waiting",
     })
     .not("id", "is", null);
@@ -450,6 +452,7 @@ export async function startShowcaseRound(): Promise<boolean> {
     .update({
       game_stage: "showcase",
       one_away_state: null,
+      wheel_state: null,
       team_1_showcase_guess: null,
       team_2_showcase_guess: null,
       team_3_showcase_guess: null,
@@ -645,6 +648,7 @@ export async function startOneAwayRound(): Promise<boolean> {
     .update({
       game_stage: "one_away",
       one_away_state: state as unknown as Json,
+      wheel_state: null,
     })
     .not("id", "is", null);
 
@@ -767,6 +771,390 @@ export async function endOneAwayRound(): Promise<boolean> {
 
   if (error) {
     console.error("Error ending One Away round:", error.message);
+    return false;
+  }
+
+  return true;
+}
+
+// ===================== THE WHEEL (Showcase Showdown) =====================
+
+// Real Big Wheel layout: 20 sections in clockwise order. $1.00 sits at index 0
+// (top) flanked by 5c and 15c, the sections that pay on a bonus spin.
+export const WHEEL_SECTIONS: number[] = [100, 15, 80, 35, 60, 20, 40, 75, 55, 95, 85, 45, 65, 70, 10, 90, 50, 25, 30, 5];
+
+export interface WheelSpin {
+  value: number; // cents
+  fromRotation: number; // cumulative degrees before the spin
+  toRotation: number; // cumulative degrees after the spin
+  durationMs: number;
+  at: number; // epoch ms when the spin started
+}
+
+export type WheelTeamStatus = "waiting" | "spun" | "done" | "bust" | "dollar";
+
+export interface WheelTeamState {
+  team: number;
+  spins: number[];
+  total: number;
+  status: WheelTeamStatus;
+}
+
+export interface WheelSpinoffState {
+  round: number;
+  order: number[]; // team numbers still tied
+  idx: number; // whose swipe is next
+  spins: { team: number; spin: WheelSpin }[];
+}
+
+export type WheelPhase =
+  | "spin"
+  | "spinning"
+  | "choose"
+  | "turn_end"
+  | "bonus"
+  | "bonus_spinning"
+  | "bonus_done"
+  | "spinoff"
+  | "spinoff_spinning";
+
+export interface WheelState {
+  turn: number; // active team 1-3 during the main turns
+  phase: WheelPhase;
+  teams: WheelTeamState[];
+  baseRotation: number; // wheel's settled cumulative rotation
+  currentSpin: WheelSpin | null;
+  bonusGiven: number[]; // teams that already took their bonus spin
+  bonusActiveTeam: number | null;
+  bonusSpin: WheelSpin | null;
+  spinoff: WheelSpinoffState | null;
+  winners: number[];
+  dollarTeams: number[];
+}
+
+export function parseWheelState(raw: Json | null | undefined): WheelState | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const s = raw as Record<string, unknown>;
+  if (typeof s.turn !== "number" || typeof s.phase !== "string" || !Array.isArray(s.teams)) return null;
+  return {
+    turn: s.turn,
+    phase: s.phase as WheelPhase,
+    teams: s.teams as unknown as WheelTeamState[],
+    baseRotation: typeof s.baseRotation === "number" ? s.baseRotation : 0,
+    currentSpin: (s.currentSpin as WheelSpin | null) ?? null,
+    bonusGiven: Array.isArray(s.bonusGiven) ? (s.bonusGiven as number[]) : [],
+    bonusActiveTeam: (s.bonusActiveTeam as number | null) ?? null,
+    bonusSpin: (s.bonusSpin as WheelSpin | null) ?? null,
+    spinoff: (s.spinoff as WheelSpinoffState | null) ?? null,
+    winners: Array.isArray(s.winners) ? (s.winners as number[]) : [],
+    dollarTeams: Array.isArray(s.dollarTeams) ? (s.dollarTeams as number[]) : [],
+  };
+}
+
+// Map swipe velocity (px/ms) to wheel travel in degrees.
+// The wheel must complete at least one full revolution for the spin to count.
+export function wheelTravelForVelocity(velocity: number): number {
+  return Math.min(8 * 360, Math.max(1.08 * 360, velocity * 180));
+}
+
+// Section under the top pointer when the wheel sits at `rotation` degrees (clockwise).
+// Section i is centered at wheel-local angle i*18; the pointer sits at global angle 0.
+export function wheelSectionAtRotation(rotation: number): number {
+  const norm = ((360 - (rotation % 360)) % 360 + 360) % 360;
+  return Math.round(norm / 18) % 20;
+}
+
+function buildWheelSpin(baseRotation: number, velocity: number): WheelSpin {
+  const travel = wheelTravelForVelocity(velocity);
+  const toRotation = baseRotation + travel;
+  const value = WHEEL_SECTIONS[wheelSectionAtRotation(toRotation)];
+  const durationMs = Math.round(Math.min(6500, Math.max(2600, (travel / 360) * 1250)));
+  return { value, fromRotation: baseRotation, toRotation, durationMs, at: Date.now() };
+}
+
+function wheelScoreUpdate(gameState: GameStateWithProduct, team: number, points: number) {
+  const newScore = ((gameState[`team_${team}_score` as keyof GameState] as number | null) ?? 0) + points;
+  return team === 1 ? { team_1_score: newScore } : team === 2 ? { team_2_score: newScore } : { team_3_score: newScore };
+}
+
+async function writeWheelState(patch: Record<string, unknown>, state: WheelState): Promise<boolean> {
+  const { error } = await supabase
+    .from("game_state")
+    .update({ ...patch, wheel_state: state as unknown as Json })
+    .not("id", "is", null);
+  if (error) {
+    console.error("Error updating wheel state:", error.message);
+    return false;
+  }
+  return true;
+}
+
+// Start the Wheel round: team 1 up first, one spin per swipe
+export async function startWheelRound(): Promise<boolean> {
+  const teams: WheelTeamState[] = [1, 2, 3].map((team) => ({ team, spins: [], total: 0, status: "waiting" }));
+  const state: WheelState = {
+    turn: 1,
+    phase: "spin",
+    teams,
+    baseRotation: 0,
+    currentSpin: null,
+    bonusGiven: [],
+    bonusActiveTeam: null,
+    bonusSpin: null,
+    spinoff: null,
+    winners: [],
+    dollarTeams: [],
+  };
+  const { error } = await supabase
+    .from("game_state")
+    .update({
+      game_stage: "wheel",
+      one_away_state: null,
+      wheel_state: state as unknown as Json,
+    })
+    .not("id", "is", null);
+
+  if (error) {
+    console.error("Error starting wheel round:", error.message);
+    return false;
+  }
+  return true;
+}
+
+// Swipe the wheel. velocity is px/ms from the host device. Only records the
+// spin animation (no result yet) so the TV cannot spoil the landing. The host
+// calls confirmWheelSpin once its animation finishes to apply the result.
+export async function spinWheel(velocity: number): Promise<WheelSpin | null> {
+  const gameState = await getGameState();
+  const state = parseWheelState(gameState?.wheel_state);
+  if (!gameState || !state || gameState.game_stage !== "wheel") return null;
+
+  if (state.phase === "spin") {
+    const teamIdx = state.turn - 1;
+    const team = state.teams[teamIdx];
+    if (!team || (team.status !== "waiting" && team.status !== "spun")) return null;
+
+    const spin = buildWheelSpin(state.baseRotation, velocity);
+    const next: WheelState = {
+      ...state,
+      phase: "spinning",
+      baseRotation: spin.toRotation,
+      currentSpin: spin,
+    };
+    const ok = await writeWheelState({}, next);
+    return ok ? spin : null;
+  }
+
+  if (state.phase === "bonus") {
+    const team = state.bonusActiveTeam;
+    if (!team) return null;
+    const spin = buildWheelSpin(state.baseRotation, velocity);
+    const next: WheelState = {
+      ...state,
+      phase: "bonus_spinning",
+      baseRotation: spin.toRotation,
+      bonusSpin: spin,
+    };
+    const ok = await writeWheelState({}, next);
+    return ok ? spin : null;
+  }
+
+  if (state.phase === "spinoff" && state.spinoff) {
+    const so = state.spinoff;
+    const activeTeam = so.order[so.idx];
+    if (activeTeam === undefined) return null;
+    const spin = buildWheelSpin(state.baseRotation, velocity);
+    const next: WheelState = {
+      ...state,
+      phase: "spinoff_spinning",
+      baseRotation: spin.toRotation,
+      currentSpin: spin,
+    };
+    const ok = await writeWheelState({}, next);
+    return ok ? spin : null;
+  }
+
+  return null;
+}
+
+// Apply the result of a finished spin. Called by the host device after the
+// wheel animation completes. Idempotent: a no-op once the phase advances.
+export async function confirmWheelSpin(): Promise<boolean> {
+  const gameState = await getGameState();
+  const state = parseWheelState(gameState?.wheel_state);
+  if (!gameState || !state || gameState.game_stage !== "wheel") return false;
+
+  if (state.phase === "spinning" && state.currentSpin) {
+    const value = WHEEL_SECTIONS[wheelSectionAtRotation(state.currentSpin.toRotation)];
+    const teamIdx = state.turn - 1;
+    const team = state.teams[teamIdx];
+    if (!team) return false;
+
+    const spins = [...team.spins, value];
+    const total = spins.reduce((a, b) => a + b, 0);
+
+    let status: WheelTeamStatus;
+    let phase: WheelPhase;
+    let dollarTeams = state.dollarTeams;
+    const patch: Record<string, unknown> = {};
+
+    if (total === 100) {
+      // Exact $1.00: 3 points right now plus a bonus spin coming up
+      status = "dollar";
+      phase = "turn_end";
+      dollarTeams = [...dollarTeams, team.team];
+      Object.assign(patch, wheelScoreUpdate(gameState, team.team, 3));
+    } else if (spins.length >= 2) {
+      status = total > 100 ? "bust" : "done";
+      phase = "turn_end";
+    } else {
+      status = "spun";
+      phase = "choose";
+    }
+
+    const teams = state.teams.map((t, i) => (i === teamIdx ? { ...t, spins, total, status } : t));
+    const next: WheelState = { ...state, teams, phase, dollarTeams };
+    return writeWheelState(patch, next);
+  }
+
+  if (state.phase === "bonus_spinning" && state.bonusSpin && state.bonusActiveTeam) {
+    const next: WheelState = {
+      ...state,
+      phase: "bonus_done",
+      bonusGiven: [...state.bonusGiven, state.bonusActiveTeam],
+    };
+    return writeWheelState({}, next);
+  }
+
+  if (state.phase === "spinoff_spinning" && state.spinoff && state.currentSpin) {
+    const so = state.spinoff;
+    const activeTeam = so.order[so.idx];
+    if (activeTeam === undefined) return false;
+    const spins = [...so.spins, { team: activeTeam, spin: state.currentSpin }];
+    const idx = so.idx + 1;
+    const next: WheelState = {
+      ...state,
+      phase: idx >= so.order.length ? "turn_end" : "spinoff",
+      spinoff: { ...so, idx, spins },
+    };
+    return writeWheelState({}, next);
+  }
+
+  return false;
+}
+
+// Lock in the first spin's total (no second spin)
+export async function stayWheel(): Promise<boolean> {
+  const gameState = await getGameState();
+  const state = parseWheelState(gameState?.wheel_state);
+  if (!gameState || !state || gameState.game_stage !== "wheel" || state.phase !== "choose") return false;
+
+  const teamIdx = state.turn - 1;
+  const teams = state.teams.map((t, i) => (i === teamIdx ? { ...t, status: "done" as WheelTeamStatus } : t));
+  return writeWheelState({}, { ...state, teams, phase: "turn_end" });
+}
+
+// Take the second spin (combined total; over $1.00 busts)
+export async function spinAgainWheel(): Promise<boolean> {
+  const gameState = await getGameState();
+  const state = parseWheelState(gameState?.wheel_state);
+  if (!gameState || !state || gameState.game_stage !== "wheel" || state.phase !== "choose") return false;
+
+  return writeWheelState({}, { ...state, phase: "spin" });
+}
+
+async function completeWheel(
+  gameState: GameStateWithProduct,
+  state: WheelState,
+  winners: number[]
+): Promise<boolean> {
+  const patch: Record<string, unknown> = {};
+  if (winners.length > 0) {
+    Object.assign(patch, wheelScoreUpdate(gameState, winners[0], 3));
+  }
+  const next: WheelState = { ...state, phase: "turn_end", winners };
+  const { error } = await supabase
+    .from("game_state")
+    .update({
+      ...patch,
+      game_stage: "wheel_complete",
+      wheel_state: next as unknown as Json,
+    })
+    .not("id", "is", null);
+  if (error) {
+    console.error("Error completing wheel round:", error.message);
+    return false;
+  }
+  return true;
+}
+
+// Advance the flow: next team, pending bonus spins, spin-off rounds, or finish
+export async function nextWheelTurn(): Promise<boolean> {
+  const gameState = await getGameState();
+  const state = parseWheelState(gameState?.wheel_state);
+  if (!gameState || !state || gameState.game_stage !== "wheel") return false;
+  if (state.phase !== "turn_end" && state.phase !== "bonus_done") return false;
+
+  // A finished spin-off round: crown the winner or go another round
+  if (state.phase === "turn_end" && state.spinoff && state.spinoff.idx >= state.spinoff.order.length) {
+    const so = state.spinoff;
+    const best = Math.max(...so.spins.map((s) => s.spin.value));
+    const leaders = [...new Set(so.spins.filter((s) => s.spin.value === best).map((s) => s.team))];
+    if (leaders.length === 1) {
+      return completeWheel(gameState, state, [leaders[0]]);
+    }
+    return writeWheelState(
+      {},
+      { ...state, phase: "spinoff", spinoff: { round: so.round + 1, order: leaders, idx: 0, spins: [] } }
+    );
+  }
+
+  // Bonus spins owed to teams that hit exactly $1.00
+  const nextBonus = state.dollarTeams.find((t) => !state.bonusGiven.includes(t));
+  if (nextBonus !== undefined) {
+    return writeWheelState({}, { ...state, phase: "bonus", bonusActiveTeam: nextBonus, bonusSpin: null });
+  }
+
+  // More teams still to spin in the main flow
+  if (state.turn < 3) {
+    return writeWheelState({}, { ...state, turn: state.turn + 1, phase: "spin" });
+  }
+
+  // All turns done: resolve the round. A $1.00 banks +3 on the spot but is no
+  // auto win — dollar teams are simply the top totals in the pool, so only
+  // another $1.00 can tie them and force a spin-off for the round's 3 points.
+  const candidates = state.teams.filter((t) => t.status === "done" || t.status === "dollar");
+  if (candidates.length === 0) {
+    // Everyone busted: the last spinner wins by default
+    return completeWheel(gameState, state, [3]);
+  }
+
+  const best = Math.max(...candidates.map((t) => t.total));
+  const leaders = candidates.filter((t) => t.total === best);
+  if (leaders.length === 1) {
+    return completeWheel(gameState, state, [leaders[0].team]);
+  }
+
+  // Tie for the lead (including multiple $1.00s): spin-off, one spin each.
+  // The spin-off winner banks the round's 3 points.
+  return writeWheelState(
+    {},
+    { ...state, phase: "spinoff", spinoff: { round: 1, order: leaders.map((t) => t.team), idx: 0, spins: [] } }
+  );
+}
+
+// End the round and return to the waiting stage
+export async function endWheelRound(): Promise<boolean> {
+  const { error } = await supabase
+    .from("game_state")
+    .update({
+      game_stage: "waiting",
+      wheel_state: null,
+    })
+    .not("id", "is", null);
+
+  if (error) {
+    console.error("Error ending wheel round:", error.message);
     return false;
   }
 

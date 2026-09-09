@@ -25,12 +25,22 @@ import {
   nextOneAwayTurn,
   endOneAwayRound,
   parseOneAwayState,
+  startWheelRound,
+  spinWheel,
+  confirmWheelSpin,
+  stayWheel,
+  spinAgainWheel,
+  nextWheelTurn,
+  endWheelRound,
+  parseWheelState,
   type GameStateWithProduct 
 } from "@/services/gameService";
+import { WheelDisplay } from "@/components/WheelDisplay";
 import { 
   Play, 
   Eye, 
   RotateCcw, 
+  RotateCw, 
   Upload, 
   Download,
   Trophy,
@@ -335,6 +345,139 @@ export default function HostController() {
     setIsLoading(false);
   };
 
+  // The Wheel (Showcase Showdown) derived state
+  const wheel = parseWheelState(gameState?.wheel_state);
+  const wheelLabel = (v: number) => (v === 100 ? "$1.00" : `${v}¢`);
+  const wheelTeamName = (n: number) =>
+    n === 1 ? gameState?.team_1_name || "Team 1" : n === 2 ? gameState?.team_2_name || "Team 2" : gameState?.team_3_name || "Team 3";
+  const wheelSpinning = wheel?.phase === "spinning" || wheel?.phase === "bonus_spinning" || wheel?.phase === "spinoff_spinning";
+  const wheelAwaitingSwipe = wheel?.phase === "spin" || wheel?.phase === "bonus" || wheel?.phase === "spinoff";
+  const wheelActiveSpin = wheel
+    ? wheel.phase === "bonus" || wheel.phase === "bonus_spinning" || wheel.phase === "bonus_done"
+      ? wheel.bonusSpin
+      : wheel.currentSpin
+    : null;
+  const wheelActiveTeam = !wheel
+    ? null
+    : wheel.phase === "bonus" || wheel.phase === "bonus_spinning" || wheel.phase === "bonus_done"
+    ? wheel.bonusActiveTeam
+    : wheel.phase === "spinoff" || wheel.phase === "spinoff_spinning"
+    ? wheel.spinoff?.order[wheel.spinoff.idx] ?? null
+    : wheel.turn;
+
+  const handleStartWheel = async () => {
+    setIsLoading(true);
+    const success = await startWheelRound();
+    if (success) {
+      toast({
+        title: "The Wheel Started!",
+        description: "Closest to $1.00 without going over wins 3 points.",
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not start The Wheel.",
+      });
+    }
+    setIsLoading(false);
+  };
+
+  const handleStayWheel = async () => {
+    setIsLoading(true);
+    await stayWheel();
+    setIsLoading(false);
+  };
+
+  const handleSpinAgainWheel = async () => {
+    setIsLoading(true);
+    await spinAgainWheel();
+    setIsLoading(false);
+  };
+
+  const handleNextWheel = async () => {
+    setIsLoading(true);
+    await nextWheelTurn();
+    setIsLoading(false);
+  };
+
+  const handleEndWheel = async () => {
+    setIsLoading(true);
+    await endWheelRound();
+    toast({
+      title: "Wheel Complete",
+      description: "Back to the regular game.",
+    });
+    setIsLoading(false);
+  };
+
+  const handleWheelSwipe = async (velocity: number) => {
+    const spin = await spinWheel(velocity);
+    if (!spin) {
+      toast({
+        variant: "destructive",
+        title: "Spin Failed",
+        description: "Could not spin the wheel. Try again.",
+      });
+    }
+  };
+
+  // Record the spin result once the host animation finishes
+  const confirmingWheelRef = useRef(false);
+  const handleWheelSpinEnd = useCallback(async () => {
+    if (confirmingWheelRef.current) return;
+    confirmingWheelRef.current = true;
+    try {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (await confirmWheelSpin()) return;
+        await new Promise((r) => setTimeout(r, 1500));
+      }
+      toast({
+        variant: "destructive",
+        title: "Spin Not Recorded",
+        description: "Refresh this page to sync the wheel.",
+      });
+    } finally {
+      confirmingWheelRef.current = false;
+    }
+  }, [toast]);
+
+  // Safety net: confirm an orphaned spin (host refreshed mid-animation)
+  useEffect(() => {
+    if (!wheel || !wheelSpinning || !wheelActiveSpin) return;
+    if (Date.now() > wheelActiveSpin.at + wheelActiveSpin.durationMs) handleWheelSpinEnd();
+  }, [gameState, wheel, wheelSpinning, wheelActiveSpin, handleWheelSpinEnd]);
+
+  // Swipe capture: track recent pointer samples, fling velocity = px/ms
+  const wheelSwipeRef = useRef<{ x: number; y: number; t: number }[]>([]);
+  const handleWheelPointerDown = (e: React.PointerEvent) => {
+    wheelSwipeRef.current = [{ x: e.clientX, y: e.clientY, t: Date.now() }];
+  };
+  const handleWheelPointerMove = (e: React.PointerEvent) => {
+    const h = wheelSwipeRef.current;
+    if (!h.length) return;
+    h.push({ x: e.clientX, y: e.clientY, t: Date.now() });
+    if (h.length > 24) h.shift();
+  };
+  const handleWheelPointerUp = (e: React.PointerEvent) => {
+    const h = wheelSwipeRef.current;
+    wheelSwipeRef.current = [];
+    if (h.length < 2) return;
+    const up = { x: e.clientX, y: e.clientY, t: Date.now() };
+    const cutoff = up.t - 120;
+    let start = h[0];
+    for (const s of h) {
+      if (s.t >= cutoff) {
+        start = s;
+        break;
+      }
+    }
+    const dist = Math.hypot(up.x - start.x, up.y - start.y);
+    const dt = Math.max(1, up.t - start.t);
+    if (dist < 30) return;
+    void handleWheelSwipe(dist / dt);
+  };
+
   const handleCSVUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -589,7 +732,7 @@ export default function HostController() {
               {/* Start New Round */}
               <Button 
                 onClick={handleStartRound} 
-                disabled={isLoading || gameState?.game_stage === "guessing"}
+                disabled={isLoading || gameState?.game_stage === "guessing" || gameState?.game_stage === "wheel" || gameState?.game_stage === "wheel_complete"}
                 className="w-full h-14 text-lg font-bold"
                 size="lg"
               >
@@ -695,7 +838,9 @@ export default function HostController() {
                   gameState?.game_stage === "showcase_revealed" ||
                   gameState?.game_stage === "one_away" ||
                   gameState?.game_stage === "one_away_reveal" ||
-                  gameState?.game_stage === "one_away_complete"}
+                  gameState?.game_stage === "one_away_complete" ||
+                  gameState?.game_stage === "wheel" ||
+                  gameState?.game_stage === "wheel_complete"}
                 className="w-full h-14 text-lg font-bold"
                 size="lg"
               >
@@ -794,6 +939,184 @@ export default function HostController() {
             </CardContent>
           </Card>
 
+          {/* The Wheel (Showcase Showdown) */}
+          <Card className="border-2 border-gold bg-gold/5">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <RotateCw className="w-5 h-5 text-gold" />
+                The Wheel (3 Points!)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Start Wheel Button */}
+              <Button 
+                onClick={handleStartWheel} 
+                disabled={isLoading || 
+                  gameState?.game_stage === "guessing" || 
+                  gameState?.game_stage === "showcase" || 
+                  gameState?.game_stage === "showcase_revealed" ||
+                  gameState?.game_stage === "one_away" ||
+                  gameState?.game_stage === "one_away_reveal" ||
+                  gameState?.game_stage === "one_away_complete" ||
+                  gameState?.game_stage === "wheel" ||
+                  gameState?.game_stage === "wheel_complete"}
+                className="w-full h-14 text-lg font-bold bg-gold hover:bg-gold/90 text-foreground"
+                size="lg"
+              >
+                <RotateCw className="w-6 h-6 mr-2" />
+                Start The Wheel
+              </Button>
+
+              {gameState?.game_stage === "wheel" && wheel && (
+                <div className="space-y-3">
+                  {/* Wheel + swipe area */}
+                  <div
+                    className="flex justify-center select-none"
+                    style={wheelAwaitingSwipe ? { touchAction: "none", cursor: "grab" } : undefined}
+                    onPointerDown={wheelAwaitingSwipe ? handleWheelPointerDown : undefined}
+                    onPointerMove={wheelAwaitingSwipe ? handleWheelPointerMove : undefined}
+                    onPointerUp={wheelAwaitingSwipe ? handleWheelPointerUp : undefined}
+                    onPointerCancel={wheelAwaitingSwipe ? () => (wheelSwipeRef.current = []) : undefined}
+                  >
+                    <WheelDisplay size={300} baseRotation={wheel.baseRotation} spin={wheelActiveSpin} onSpinEnd={handleWheelSpinEnd} />
+                  </div>
+
+                  {/* Phase panels */}
+                  {wheel.phase === "spin" && (
+                    <div className="space-y-1 text-center">
+                      <p className={`text-lg font-bold ${wheel.turn === 1 ? "text-team1" : wheel.turn === 2 ? "text-team2" : "text-team3"}`}>
+                        {wheelTeamName(wheel.turn)} - SPIN THE WHEEL!
+                      </p>
+                      <p className="text-xs text-muted-foreground">Swipe the wheel above. Harder swipe = farther spin.</p>
+                    </div>
+                  )}
+                  {wheelSpinning && (
+                    <p className="text-center text-lg font-bold animate-pulse">SPINNING...</p>
+                  )}
+                  {wheel.phase === "choose" && (
+                    <div className="space-y-2">
+                      <p className="text-center text-sm font-semibold">
+                        {wheelTeamName(wheel.turn)}: {wheel.teams[wheel.turn - 1]?.spins.map(wheelLabel).join(" + ")} = {wheelLabel(wheel.teams[wheel.turn - 1]?.total ?? 0)}
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button onClick={handleSpinAgainWheel} disabled={isLoading} className="h-12 font-bold">
+                          SPIN AGAIN
+                        </Button>
+                        <Button onClick={handleStayWheel} disabled={isLoading} variant="secondary" className="h-12 font-bold">
+                          STAY ({wheelLabel(wheel.teams[wheel.turn - 1]?.total ?? 0)})
+                        </Button>
+                      </div>
+                      <p className="text-xs text-center text-muted-foreground">Over $1.00 total = bust</p>
+                    </div>
+                  )}
+                  {wheel.phase === "turn_end" && (
+                    <div className="space-y-2 text-center">
+                      {wheel.spinoff && wheel.spinoff.idx >= wheel.spinoff.order.length ? (
+                        <p className="text-lg font-bold">Spin-off complete!</p>
+                      ) : wheel.teams[wheel.turn - 1]?.status === "dollar" ? (
+                        <p className="text-lg font-extrabold text-gold">EXACTLY $1.00! +3 POINTS + BONUS SPIN!</p>
+                      ) : wheel.teams[wheel.turn - 1]?.status === "bust" ? (
+                        <p className="text-lg font-bold text-destructive">OVER $1.00 - BUST!</p>
+                      ) : (
+                        <p className="text-lg font-bold">{wheelTeamName(wheel.turn)}: {wheelLabel(wheel.teams[wheel.turn - 1]?.total ?? 0)}</p>
+                      )}
+                      <Button onClick={handleNextWheel} disabled={isLoading} className="w-full h-12 font-bold">
+                        {wheel.spinoff && wheel.spinoff.idx >= wheel.spinoff.order.length
+                          ? "Crown the Winner"
+                          : wheel.dollarTeams.some((t) => !wheel.bonusGiven.includes(t))
+                          ? "Start the Bonus Spin!"
+                          : wheel.turn < 3
+                          ? "Next Team"
+                          : "See the Winner"}
+                      </Button>
+                    </div>
+                  )}
+                  {wheel.phase === "bonus" && (
+                    <div className="space-y-1 text-center">
+                      <p className={`text-lg font-bold ${wheel.bonusActiveTeam === 1 ? "text-team1" : wheel.bonusActiveTeam === 2 ? "text-team2" : "text-team3"}`}>
+                        {wheelTeamName(wheel.bonusActiveTeam ?? 0)} - BONUS SPIN!
+                      </p>
+                      <p className="text-xs text-muted-foreground">Land $1.00 for $25,000. 5¢ or 15¢ pays $10,000. Swipe above!</p>
+                    </div>
+                  )}
+                  {wheel.phase === "bonus_done" && wheel.bonusSpin && (
+                    <div className="space-y-2 text-center">
+                      <p className="text-lg font-extrabold text-gold">
+                        {wheel.bonusSpin.value === 100
+                          ? "$1.00! WIN $25,000!!!"
+                          : wheel.bonusSpin.value === 5 || wheel.bonusSpin.value === 15
+                          ? `${wheelLabel(wheel.bonusSpin.value)} - WIN $10,000!`
+                          : `${wheelLabel(wheel.bonusSpin.value)} - no bonus cash`}
+                      </p>
+                      <Button onClick={handleNextWheel} disabled={isLoading} className="w-full h-12 font-bold">
+                        Continue
+                      </Button>
+                    </div>
+                  )}
+                  {(wheel.phase === "spinoff" || wheel.phase === "spinoff_spinning") && wheel.spinoff && (
+                    <div className="space-y-2 text-center">
+                      <p className="text-lg font-bold">
+                        SPIN-OFF! {wheel.phase === "spinoff" ? `${wheelTeamName(wheel.spinoff.order[wheel.spinoff.idx] ?? 0)} - one spin!` : "Spinning..."}
+                      </p>
+                      {wheel.spinoff.spins.length > 0 && (
+                        <p className="text-sm text-muted-foreground">
+                          {wheel.spinoff.spins.map((s) => `${wheelTeamName(s.team)}: ${wheelLabel(s.spin.value)}`).join(", ")}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground">Tie-breaker: closest single spin wins</p>
+                    </div>
+                  )}
+
+                  {/* Teams board */}
+                  <div className="space-y-1">
+                    {wheel.teams.map((t) => (
+                      <div
+                        key={t.team}
+                        className={`flex items-center justify-between rounded-lg px-3 py-1.5 text-sm font-semibold ${
+                          wheelActiveTeam === t.team ? "bg-muted ring-2 ring-gold" : "bg-muted/50"
+                        }`}
+                      >
+                        <span className={t.team === 1 ? "text-team1" : t.team === 2 ? "text-team2" : "text-team3"}>
+                          {wheelTeamName(t.team)}
+                        </span>
+                        <span>
+                          {t.status === "bust" ? (
+                            <span className="text-destructive">{wheelLabel(t.total)} - BUST</span>
+                          ) : t.status === "dollar" ? (
+                            <span className="text-gold font-extrabold">$1.00!</span>
+                          ) : t.spins.length === 0 ? (
+                            "-"
+                          ) : (
+                            `${t.spins.map(wheelLabel).join(" + ")} = ${wheelLabel(t.total)}`
+                          )}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Wheel Complete Summary */}
+              {gameState?.game_stage === "wheel_complete" && wheel && (
+                <div className="space-y-2">
+                  {wheel.teams.map((t) => (
+                    <p key={t.team} className={`text-sm font-semibold text-center ${
+                      wheel.winners.includes(t.team) ? "text-gold" : ""
+                    }`}>
+                      {wheelTeamName(t.team)}:{" "}
+                      {t.status === "bust"
+                        ? `${wheelLabel(t.total)} - BUST`
+                        : `${wheelLabel(t.total)}${wheel.winners.includes(t.team) ? " - WINNER +3 POINTS!" : ""}${t.status === "dollar" ? " ($1.00 + bonus spin)" : ""}`}
+                    </p>
+                  ))}
+                  <Button onClick={handleEndWheel} disabled={isLoading} variant="secondary" className="w-full h-12 font-bold">
+                    End Wheel Round
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Showcase Round */}
           <Card className="border-2 border-gold bg-gold/5">
             <CardHeader>
@@ -806,7 +1129,7 @@ export default function HostController() {
               {/* Start Showcase Button */}
               <Button 
                 onClick={handleStartShowcase} 
-                disabled={isLoading || gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" || gameState?.game_stage === "one_away" || gameState?.game_stage === "one_away_reveal" || gameState?.game_stage === "one_away_complete"}
+                disabled={isLoading || gameState?.game_stage === "showcase" || gameState?.game_stage === "showcase_revealed" || gameState?.game_stage === "one_away" || gameState?.game_stage === "one_away_reveal" || gameState?.game_stage === "one_away_complete" || gameState?.game_stage === "wheel" || gameState?.game_stage === "wheel_complete"}
                 className="w-full h-14 text-lg font-bold bg-gold hover:bg-gold/90 text-foreground"
                 size="lg"
               >

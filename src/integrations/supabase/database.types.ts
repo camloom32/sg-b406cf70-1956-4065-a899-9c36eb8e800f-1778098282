@@ -38,6 +38,7 @@ export type Database = {
           team_3_showcase_guess: number | null
           team_3_showcase_id: number | null
           updated_at: string | null
+          wheel_state: Json | null
         }
         Insert: {
           current_product_id?: string | null
@@ -61,6 +62,7 @@ export type Database = {
           team_3_showcase_guess?: number | null
           team_3_showcase_id?: number | null
           updated_at?: string | null
+          wheel_state?: Json | null
         }
         Update: {
           current_product_id?: string | null
@@ -84,6 +86,7 @@ export type Database = {
           team_3_showcase_guess?: number | null
           team_3_showcase_id?: number | null
           updated_at?: string | null
+          wheel_state?: Json | null
         }
         Relationships: [
           {
