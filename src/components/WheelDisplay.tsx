@@ -191,7 +191,7 @@ export function WheelDisplay({
             width: 0,
             height: 0,
             transformStyle: "preserve-3d",
-            transform: `rotateX(${rotation}deg)`,
+            transform: `rotateX(${-rotation}deg)`,
           }}
         >
           {WHEEL_SECTIONS.map((v, i) => {
@@ -211,7 +211,7 @@ export function WheelDisplay({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  backfaceVisibility: "hidden",
+                  backfaceVisibility: "visible",
                   transform: `rotateX(${angle}deg) translateZ(${RADIUS}px) rotateZ(0deg)`,
                 }}
               >
