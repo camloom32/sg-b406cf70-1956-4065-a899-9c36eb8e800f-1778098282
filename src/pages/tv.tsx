@@ -610,7 +610,8 @@ export default function TVDisplay() {
                     </>
                   )}
                 </div>
-                {/* Team scores */}
+                {/* Team scores - hidden during spinning for suspense */}
+                {!(wheel.phase === "spinning" || wheel.phase === "bonus_spinning" || wheel.phase === "spinoff_spinning") && (
                 <div className="space-y-2">
                   {wheel.teams.map((t) => {
                     const teamId = `team${t.team}` as TeamId;
@@ -633,6 +634,7 @@ export default function TVDisplay() {
                     );
                   })}
                 </div>
+                )}
               </div>
             </div>
           )}
