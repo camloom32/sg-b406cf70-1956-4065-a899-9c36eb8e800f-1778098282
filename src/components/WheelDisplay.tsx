@@ -29,23 +29,23 @@ export function formatWheelLabel(v: number): string {
   return v === 100 ? "100" : `${v}`;
 }
 
-// ---- Ratchet tick sound (Web Audio, no assets) ----
-let audioCtx: AudioContext | null = null;
+// ---- Tick sound (beep.mp3 asset) ----
+let beepAudio: HTMLAudioElement | null = null;
+
+function getBeepAudio(): HTMLAudioElement {
+  if (!beepAudio) {
+    beepAudio = new Audio("/beep.mp3");
+    beepAudio.volume = 0.5;
+  }
+  return beepAudio;
+}
 
 function playTick(intensity: number) {
   try {
-    if (!audioCtx) audioCtx = new AudioContext();
-    if (audioCtx.state === "suspended") void audioCtx.resume();
-    const t = audioCtx.currentTime;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = "square";
-    osc.frequency.value = 1500 + Math.min(1, Math.max(0, intensity)) * 900;
-    gain.gain.setValueAtTime(0.05 + Math.min(1, Math.max(0, intensity)) * 0.09, t);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.035);
-    osc.connect(gain).connect(audioCtx.destination);
-    osc.start(t);
-    osc.stop(t + 0.05);
+    const audio = getBeepAudio();
+    audio.currentTime = 0;
+    audio.volume = 0.3 + Math.min(1, Math.max(0, intensity)) * 0.5;
+    void audio.play();
   } catch {
     // audio blocked until user gesture; stay silent
   }
